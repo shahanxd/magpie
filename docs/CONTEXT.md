@@ -2,7 +2,7 @@
 
 Read this together with `docs/PLAN.md` (plan v2) before doing any work. It records what has been decided, what has been checked, and what happens next.
 
-**Status (Nov 4, 2026):** plan v2 **approved**; build phase **in progress**. Repo scaffold, cost model, serving layer (vLLM/HF/echo), the L0–L1 attacks, the multilingual judge + collapse guard, the Hinglish tools, the survival analysis, the Kaggle runner and the data loaders are committed with CPU CI green. The day-1 smoke test passed on a Kaggle T4 and `docs/PREREGISTRATION.md` is committed. The first L0 run on Fire/Global is underway. See §3 for the verified numbers.
+**Status (Nov 4, 2026):** plan v2 **approved**; build phase **through the D1 gate**. The full framework (cost model, vLLM/HF/echo serving, L0–L1 attacks, multilingual judge + collapse guard + model judges, Hinglish tools, survival analysis, Kaggle runner, data loaders, HF publishing) is committed with CPU CI green. The day-1 smoke test passed on a Kaggle T4; `docs/PREREGISTRATION.md` is committed. **First L0 table** (Fire vs Global, en) and **data-v1 parallel core** (private HF dataset) are done — see §3 for verified numbers, `docs/RESULTS.md` for the tables and findings, and §6 for what's next.
 
 ---
 
@@ -104,11 +104,17 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - Data (`magpie.data`): seed loaders, harm taxonomy, stratification, parallel-core assembly.
 - `docs/PREREGISTRATION.md` committed before the runs.
 
+**Done (runs landed, committed):**
+- **First L0 table** on Fire/Global (en): `results/l0/20261104-173906/` — ASR 0.21 (Fire) / 0.24 (Global), over-refusal 0.13, collapse ~1% (lexicon judge). See `docs/RESULTS.md`.
+- **Data v1 parallel core**: `results/build-data/20261104-181016/` — 632 records (400 en + 188 hing + 44 hi-Deva), pushed **private** to `huggingface.co/datasets/shahanxd/magpie-core-v1`.
+
 **Remaining (next):**
-1. **First L0 table** on Fire/Global (en) — run underway; add the model-judge (Llama-Guard-3-8B / WildGuard / StrongREJECT scorer) rescoring pass to replace the lexicon pre-filter in the headline numbers.
-2. **Hinglish + Devanagari translations** of the core via Aya Expanse 8B on Kaggle (free, permitted Cohere model) + team verification; compute CMI; CuratorKIT gates + provenance; push a **private** HF dataset.
+1. **Model-judge rescoring** of L0 with Llama-Guard-3-8B / WildGuard / the StrongREJECT scorer, to replace the lexicon pre-filter in the headline ASR (the code is in `magpie.judges.model_judge`).
+2. **Better translations** for the core: accept the **Aya Expanse 8B** licence on Kaggle so it mounts (it is gated; v1 used tiny-aya Fire, which gave low-CMI Hinglish and a low back-translation pass rate), re-run `build_data` with `translate_model=aya`, replace the token-overlap agreement proxy with embedding similarity, then the native-verification sprint. Then run L0 per form (en vs hing vs hi-Deva).
 3. Hardening (M2 RR / M3 RepNoise / M5 CAST) on Kaggle via SafeTune; L1a/b; prefill depth; refusal margins.
 4. BoN power laws (synthetic vs natural vs Devanagari), abliteration, injection suite, then the Cox prediction study (H4).
+
+**Known environment facts for GPU jobs:** the vLLM venv on Kaggle must also carry `accelerate`, `datasets`, `curatorkit`, `sentencepiece`, `tiktoken` (now installed by `install_vllm_venv`); release vLLM between models with `VLLMBackend.close()`; attach a Kaggle model source with its version (`.../8b/5`); Aya Expanse (`cohereforai/aya-expanse`) is gated on Kaggle and needs manual licence acceptance before it will mount.
 
 ## 7. Open items
 - Discord idea-validation ticket (owner).
