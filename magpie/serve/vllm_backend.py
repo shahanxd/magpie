@@ -97,3 +97,41 @@ class VLLMBackend:
                 assistant_prefix=req.assistant_prefix,
             ))
         return result
+
+    def close(self) -> None:
+        """Release the GPU so another model can be loaded in the same process.
+
+        vLLM holds device memory in engine/worker state that ``del`` alone does
+        not free; the documented teardown tears down the (single-GPU) model
+        parallel state first. Best-effort and import-guarded across vLLM
+        versions — callers that need a hard guarantee run one model per process.
+        """
+        import gc
+
+        try:
+            from vllm.distributed.parallel_state import (
+                destroy_distributed_environment,
+                destroy_model_parallel,
+            )
+
+            destroy_model_parallel()
+            destroy_distributed_environment()
+        except Exception:  # noqa: BLE001 - version-dependent; fall through to del
+            pass
+        for attr in ("llm_engine", "engine"):
+            try:
+                delattr(self.llm, attr)
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            del self.llm
+        except Exception:  # noqa: BLE001
+            pass
+        gc.collect()
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:  # noqa: BLE001
+            pass

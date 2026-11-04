@@ -93,32 +93,45 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     backend_kind = config.get("backend", "vllm")
     for model_key in models:
         print(f"=== model {model_key} ===", flush=True)
-        gen = _build_generator(model_key, backend_kind)
-        # L0 has 1-2 variants per prompt, so batch generation across records
-        # (a per-record loop would send single prompts and waste the GPU).
-        runner = AttackRunner(gen, judge, gen_cfg, chunk_size=256,
-                              batch_across_records=True, run_id="l0",
-                              git_sha=prov.get("git_sha", ""))
-        attack = L0Direct(sampled=True, temperature=1.0, seed=seed)
-        harm_run = runner.run(attack, harmful)
-        benign_run = runner.run(attack, benign)
-        all_outcomes += harm_run.outcomes
-        all_benign_attempts += benign_run.attempts
+        gen = None
+        try:
+            gen = _build_generator(model_key, backend_kind)
+            # L0 has 1-2 variants per prompt, so batch generation across records
+            # (a per-record loop would send single prompts and waste the GPU).
+            runner = AttackRunner(gen, judge, gen_cfg, chunk_size=256,
+                                  batch_across_records=True, run_id="l0",
+                                  git_sha=prov.get("git_sha", ""))
+            attack = L0Direct(sampled=True, temperature=1.0, seed=seed)
+            harm_run = runner.run(attack, harmful)
+            benign_run = runner.run(attack, benign)
+            all_outcomes += harm_run.outcomes
+            all_benign_attempts += benign_run.attempts
 
-        write_outcomes(harm_run.outcomes, out / f"outcomes_{model_key}.jsonl")
-        # Full attempts (with text) under raw/ only; a redacted copy is committable.
-        _write_attempts(harm_run.attempts + benign_run.attempts, raw / f"attempts_{model_key}.jsonl",
-                        include_text=True)
-        _write_attempts(harm_run.attempts + benign_run.attempts,
-                        out / f"attempts_notext_{model_key}.jsonl", include_text=False)
-        per_model_summary[model_key] = {
-            "n_harmful": len(harm_run.outcomes),
-            "n_harmful_broken": sum(o.broken for o in harm_run.outcomes),
-            "n_benign_attempts": len(benign_run.attempts),
-        }
-        del gen
-        _free_gpu()
+            write_outcomes(harm_run.outcomes, out / f"outcomes_{model_key}.jsonl")
+            # Full attempts (with text) under raw/ only; a redacted copy is committable.
+            _write_attempts(harm_run.attempts + benign_run.attempts,
+                            raw / f"attempts_{model_key}.jsonl", include_text=True)
+            _write_attempts(harm_run.attempts + benign_run.attempts,
+                            out / f"attempts_notext_{model_key}.jsonl", include_text=False)
+            per_model_summary[model_key] = {
+                "ok": True, "n_harmful": len(harm_run.outcomes),
+                "n_harmful_broken": sum(o.broken for o in harm_run.outcomes),
+                "n_benign_attempts": len(benign_run.attempts),
+            }
+        except Exception as exc:  # one model's failure must not lose the others
+            import traceback
 
+            per_model_summary[model_key] = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+            (out / "logs").mkdir(parents=True, exist_ok=True)
+            (out / "logs" / f"error_{model_key}.log").write_text(traceback.format_exc())
+            print(f"model {model_key} FAILED: {exc}", flush=True)
+        finally:
+            if gen is not None and hasattr(gen.backend, "close"):
+                gen.backend.close()  # release vLLM GPU memory before the next model
+            gen = None
+            _free_gpu()
+
+    # Always write a table from whatever models completed.
     rows = build_rows(all_outcomes, benign_attempts=all_benign_attempts, n_boot=2000, seed=seed)
     bundle = ResultBundle("L0 (refusal_lexicon judge)", rows,
                           provenance={**prov, "judge": "refusal_lexicon", "level": "L0",

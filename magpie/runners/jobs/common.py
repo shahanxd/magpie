@@ -39,7 +39,11 @@ def install_vllm_venv(spec: str, out: Path) -> dict[str, Any]:
                    out / "logs" / "venv.log", timeout=300)
     if venv["returncode"] != 0:
         return {"ok": False, "stage": "venv", **venv}
-    inst = run_cmd([sys.executable, "-m", "uv", "pip", "install", "--python", VENV_PY, spec],
+    # Install the worker's deps into the venv too: accelerate (HF device_map
+    # fallback), datasets (XSTest / OR-Bench loaders), curatorkit (data-build
+    # curation). The harmful-seed CSV loaders use urllib and need none of these.
+    inst = run_cmd([sys.executable, "-m", "uv", "pip", "install", "--python", VENV_PY,
+                    spec, "accelerate>=1.0", "datasets>=3.0", "curatorkit>=0.1.22"],
                    out / "logs" / "vllm_install.log", timeout=1800, env=VENV_ENV)
     return {"ok": inst["returncode"] == 0, "stage": "install", "spec": spec,
             "seconds": inst["seconds"], "returncode": inst["returncode"],
