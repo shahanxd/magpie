@@ -17,51 +17,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from magpie.runners.jobs.common import env_report, find_model_dir, run_cmd, write_json
-
-VENV = Path("/tmp/venv-vllm")
-# The kernel bootstrap unpacks the magpie source here and puts it on PYTHONPATH.
-# Subprocesses in the fresh vLLM venv get PYTHONPATH=SRC only (plus no user-site),
-# so magpie imports but Kaggle's sitecustomize (which needs `wrapt`) does not load
-# and pollute stdout.
-SRC = "/tmp/magpie_src"
-VENV_ENV = {"PYTHONPATH": SRC, "PYTHONNOUSERSITE": "1"}
-
-
-def _install_vllm(spec: str, out: Path) -> dict[str, Any]:
-    pip = run_cmd([sys.executable, "-m", "pip", "install", "-q", "uv"],
-                  out / "logs" / "uv_install.log", timeout=300)
-    if pip["returncode"] != 0:
-        return {"ok": False, "stage": "uv", **pip}
-    venv = run_cmd([sys.executable, "-m", "uv", "venv", "--python", sys.executable, str(VENV)],
-                   out / "logs" / "venv.log", timeout=300)
-    if venv["returncode"] != 0:
-        return {"ok": False, "stage": "venv", **venv}
-    inst = run_cmd([sys.executable, "-m", "uv", "pip", "install", "--python",
-                    str(VENV / "bin" / "python"), spec],
-                   out / "logs" / "vllm_install.log", timeout=1800, env=VENV_ENV)
-    return {"ok": inst["returncode"] == 0, "stage": "install", "spec": spec,
-            "seconds": inst["seconds"], "returncode": inst["returncode"],
-            "tail": inst["tail"][-1500:]}
-
-
-def _python_env_versions(python: str, out: Path, tag: str,
-                         env: dict[str, str] | None = None) -> dict[str, Any]:
-    code = ("import json,torch,transformers;"
-            "print('MAGPIE_VERSIONS ' + json.dumps({'torch':torch.__version__,"
-            "'cuda':torch.version.cuda,'transformers':transformers.__version__,"
-            "'gpu_ok':torch.cuda.is_available(),"
-            "'n_gpu':torch.cuda.device_count()}))")
-    r = run_cmd([python, "-c", code], out / "logs" / f"versions_{tag}.log", timeout=300, env=env)
-    # Scan for our tagged line; other libraries (and Kaggle's sitecustomize) may
-    # print warnings around it, so never trust position alone.
-    for line in reversed(r["tail"].splitlines()):
-        if line.startswith("MAGPIE_VERSIONS "):
-            try:
-                return json.loads(line[len("MAGPIE_VERSIONS "):])
-            except json.JSONDecodeError:
-                break
-    return {"error": r["tail"][-800:]}
+from magpie.runners.jobs.common import (
+    VENV_ENV,
+    VENV_PY,
+    env_report,
+    find_model_dir,
+    install_vllm_venv,
+    python_env_versions,
+    run_cmd,
+    write_json,
+)
 
 
 def main(config: dict[str, Any], out_dir: Path) -> None:
@@ -73,11 +38,11 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     summary["env"] = env_report()
     write_json(out / "env.json", summary["env"])
 
-    install = _install_vllm(config.get("vllm_spec", "vllm==0.33.0"), out)
+    install = install_vllm_venv(config.get("vllm_spec", "vllm==0.33.0"), out)
     summary["vllm_install"] = install
-    venv_py = str(VENV / "bin" / "python")
+    venv_py = VENV_PY
     if install["ok"]:
-        summary["venv_versions"] = _python_env_versions(venv_py, out, "venv", env=VENV_ENV)
+        summary["venv_versions"] = python_env_versions(venv_py, out, "venv", env=VENV_ENV)
 
     worker = ["-m", "magpie.runners.jobs.smoke_worker", "--model", model_dir,
               "--out", str(out), "--max-new-tokens", str(max_new)]
@@ -87,19 +52,14 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
                                       out / "logs" / "worker_vllm.log", timeout=2400,
                                       env=VENV_ENV)
 
-    # HF path: in the venv when its torch sees the GPU (same stack as vLLM),
-    # otherwise in Kaggle's system Python (ensure a transformers that knows cohere2).
-    if venv_gpu_ok:
-        hf_python = venv_py
-    else:
-        hf_python = sys.executable
-        summary["system_transformers_upgrade"] = run_cmd(
-            [sys.executable, "-m", "pip", "install", "-q", "transformers>=5.16,<5.21"],
-            out / "logs" / "transformers_upgrade.log", timeout=900)
-    summary["hf_python"] = "venv" if hf_python == venv_py else "system"
+    # HF path always runs in Kaggle's system Python: it ships accelerate (which
+    # transformers needs for device_map) and a cohere2-aware transformers. The
+    # fresh vLLM venv deliberately has neither, so HF stays decoupled from it.
+    hf_python = sys.executable
+    summary["hf_python"] = "system"
+    summary["system_transformers"] = python_env_versions(sys.executable, out, "system")
     summary["hf_run"] = run_cmd([hf_python, *worker, "--backend", "hf", "--fp16-check"],
-                                out / "logs" / "worker_hf.log", timeout=3600,
-                                env=VENV_ENV if venv_gpu_ok else None)
+                                out / "logs" / "worker_hf.log", timeout=3600)
 
     for backend in ("vllm", "hf"):
         p = out / f"{backend}.json"

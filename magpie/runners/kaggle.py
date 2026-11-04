@@ -171,6 +171,17 @@ def smoke_job(**overrides: Any) -> KernelJob:
                      models=["fire"], timeout_s=2 * 3600)
 
 
+@job("l0")
+def l0_job(**overrides: Any) -> KernelJob:
+    """L0 + over-refusal on Fire and Global: the first robustness table (en)."""
+    cfg = {"models": ["fire", "global"], "n_harmful": 150, "n_benign": 150,
+           "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0"}
+    cfg.update(overrides)
+    # vLLM lives in an isolated venv (as in the smoke test); install it first.
+    return KernelJob(name="l0", entrypoint="magpie.runners.jobs.l0_launch:main", config=cfg,
+                     models=cfg["models"], timeout_s=3 * 3600)
+
+
 # ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------

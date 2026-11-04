@@ -16,6 +16,52 @@ from magpie.config import MODELS
 
 KAGGLE_INPUT = Path("/kaggle/input")
 
+# The kernel bootstrap unpacks the magpie source here and puts it on PYTHONPATH.
+SRC = "/tmp/magpie_src"
+VENV = Path("/tmp/venv-vllm")
+# Subprocesses in the fresh vLLM venv get PYTHONPATH=SRC only (plus no user-site)
+# so magpie imports but Kaggle's sitecustomize (needs `wrapt`) never pollutes stdout.
+VENV_ENV = {"PYTHONPATH": SRC, "PYTHONNOUSERSITE": "1"}
+VENV_PY = str(VENV / "bin" / "python")
+
+
+def install_vllm_venv(spec: str, out: Path) -> dict[str, Any]:
+    """Create an isolated venv and install vLLM into it (its pinned torch/CUDA).
+
+    Kept out of Kaggle's system stack so a mismatched wheel cannot break the HF
+    fallback. Returns a status dict; never raises.
+    """
+    uv = run_cmd([sys.executable, "-m", "pip", "install", "-q", "uv"],
+                 out / "logs" / "uv_install.log", timeout=300)
+    if uv["returncode"] != 0:
+        return {"ok": False, "stage": "uv", **uv}
+    venv = run_cmd([sys.executable, "-m", "uv", "venv", "--python", sys.executable, str(VENV)],
+                   out / "logs" / "venv.log", timeout=300)
+    if venv["returncode"] != 0:
+        return {"ok": False, "stage": "venv", **venv}
+    inst = run_cmd([sys.executable, "-m", "uv", "pip", "install", "--python", VENV_PY, spec],
+                   out / "logs" / "vllm_install.log", timeout=1800, env=VENV_ENV)
+    return {"ok": inst["returncode"] == 0, "stage": "install", "spec": spec,
+            "seconds": inst["seconds"], "returncode": inst["returncode"],
+            "tail": inst["tail"][-1500:]}
+
+
+def python_env_versions(python: str, out: Path, tag: str,
+                        env: dict[str, str] | None = None) -> dict[str, Any]:
+    """torch/transformers/CUDA versions and GPU visibility for a Python, robustly parsed."""
+    code = ("import json,torch,transformers;"
+            "print('MAGPIE_VERSIONS ' + json.dumps({'torch':torch.__version__,"
+            "'cuda':torch.version.cuda,'transformers':transformers.__version__,"
+            "'gpu_ok':torch.cuda.is_available(),'n_gpu':torch.cuda.device_count()}))")
+    r = run_cmd([python, "-c", code], out / "logs" / f"versions_{tag}.log", timeout=300, env=env)
+    for line in reversed(r["tail"].splitlines()):
+        if line.startswith("MAGPIE_VERSIONS "):
+            try:
+                return json.loads(line[len("MAGPIE_VERSIONS "):])
+            except json.JSONDecodeError:
+                break
+    return {"error": r["tail"][-800:]}
+
 
 def find_model_dir(key: str, search_root: Path = KAGGLE_INPUT) -> str:
     """Locate an attached Kaggle Models mirror for ``key``; fall back to the HF id.

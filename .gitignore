@@ -28,3 +28,8 @@ artifacts/
 *.gguf
 *.bin
 *.pt
+
+# L0/attack raw outputs pulled from kernels (harmful completions) stay gitignored.
+results/**/raw/
+results/**/attempts_*.jsonl
+results/**/_l0_config.json
