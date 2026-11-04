@@ -186,7 +186,8 @@ def l0_job(**overrides: Any) -> KernelJob:
 
 
 # Aya Expanse 8B is mirrored on Kaggle Models, so translation needs no HF token.
-AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b"
+# Kaggle requires the version number in a model source ref.
+AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b/5"
 
 
 @job("build_data")
