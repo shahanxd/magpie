@@ -22,3 +22,14 @@ __all__ = [
     "detect_collapse",
     "devanagari_fraction",
 ]
+
+from magpie.judges.model_judge import (  # noqa: E402
+    JUDGE_MODELS,
+    ModelJudge,
+    ModelJudgeConfig,
+    parse_llama_guard,
+    parse_wildguard,
+)
+
+__all__ += ["ModelJudge", "ModelJudgeConfig", "JUDGE_MODELS", "parse_llama_guard",
+            "parse_wildguard"]
