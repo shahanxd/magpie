@@ -192,16 +192,19 @@ AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b/5"
 
 @job("build_data")
 def build_data_job(**overrides: Any) -> KernelJob:
-    """Build the parallel core: translate the seeds to Hinglish/Devanagari with Aya."""
+    """Build the parallel core: translate the seeds to Hinglish/Devanagari.
+
+    v1 uses tiny-aya Fire (mounts freely on Kaggle; Aya Expanse is gated and
+    needs manual licence acceptance). Pass translate_model="aya" and
+    extra_model_sources to use Aya Expanse once its Kaggle licence is accepted.
+    """
     cfg = {"n_harmful": 200, "n_benign": 200, "forms": ["hing", "hi-Deva"],
-           "aya_model": "/kaggle/input", "back_translate": True, "max_new_tokens": 512,
-           "seed": 0, "vllm_spec": "vllm==0.33.0", "worker": "magpie.runners.jobs.build_data",
-           "timeout_s": 4 * 3600}
+           "translate_model": "fire", "tensor_parallel_size": 1, "back_translate": True,
+           "max_new_tokens": 400, "seed": 0, "vllm_spec": "vllm==0.33.0",
+           "worker": "magpie.runners.jobs.build_data", "timeout_s": 4 * 3600}
     cfg.update(overrides)
-    # Attach Aya from the Kaggle Models mirror (no tiny-aya needed for this job).
     return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
-                     models=[], extra_model_sources=[AYA_KAGGLE_SOURCE],
-                     timeout_s=cfg["timeout_s"])
+                     models=["fire"], timeout_s=cfg["timeout_s"])
 
 
 # ---------------------------------------------------------------------------

@@ -82,10 +82,12 @@ def test_extra_accounts_use_suffixed_variables():
     assert (c.username, c.token, c.account) == ("two", "tok2", 2)
 
 
-def test_build_data_job_attaches_aya_mirror():
+def test_build_data_job_attaches_translation_model():
     job = JOBS["build_data"]()
     meta = job.metadata("u")
-    assert meta["model_sources"] == ["cohereforai/aya-expanse/transformers/8b"]
+    # v1 uses tiny-aya Fire (ungated); Aya Expanse is gated on Kaggle.
+    assert meta["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
+    assert job.config["translate_model"] == "fire"
     assert job.config["worker"] == "magpie.runners.jobs.build_data"
     assert job.entrypoint == "magpie.runners.jobs.launch:main"
 

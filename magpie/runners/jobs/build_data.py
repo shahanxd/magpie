@@ -56,21 +56,30 @@ def _load_en(config: dict[str, Any]) -> tuple[list[PromptRecord], list[PromptRec
     return harmful, benign
 
 
-def _resolve_aya(aya_dir: str) -> str:
-    """Return a local Aya dir if attached on Kaggle, else the given id/path.
+def _resolve_translate_model(config: dict[str, Any]) -> str:
+    """Resolve the translation model dir on Kaggle.
 
-    Kaggle mounts an attached model under /kaggle/input/...; search for a
-    config.json whose path mentions 'aya'. Otherwise use ``aya_dir`` as given
-    (an explicit /kaggle/input path or an HF id).
+    Default is tiny-aya Fire: it mounts freely (Aya Expanse is gated on Kaggle
+    and needs manual licence acceptance), fits one T4, and is the most
+    Hindi-capable Cohere model available. A MODELS key resolves via
+    find_model_dir; an explicit path or any dir with a config.json is used as
+    is; otherwise we search /kaggle/input for a config whose path matches a hint.
     """
-    if Path(aya_dir).joinpath("config.json").is_file():
-        return aya_dir
+    from magpie.config import MODELS
+    from magpie.runners.jobs.common import find_model_dir
+
+    key = config.get("translate_model", "fire")
+    if key in MODELS:
+        return find_model_dir(key)
+    if Path(key).joinpath("config.json").is_file():
+        return key
+    hint = config.get("translate_model_hint", key).lower()
     root = Path("/kaggle/input")
     if root.is_dir():
         for cfg in sorted(root.rglob("config.json")):
-            if "aya" in str(cfg.parent).lower():
+            if hint in str(cfg.parent).lower():
                 return str(cfg.parent)
-    return aya_dir
+    return key
 
 
 def _annotate_cmi(records: list[PromptRecord]) -> None:
@@ -83,19 +92,19 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     out = Path(out_dir)
     raw = out / "raw"
     forms = config.get("forms", ["hing", "hi-Deva"])
-    aya_dir = config.get("aya_model", "CohereLabs/aya-expanse-8b")
     backend = config.get("backend", "vllm")
-    prov = provenance(run_id="build_data", aya_model=aya_dir, forms=forms)
+    prov = provenance(run_id="build_data", forms=forms,
+                      translate_model=config.get("translate_model", "fire"))
 
     harmful, benign = _load_en(config)
     en_all = harmful + benign
     print(f"loaded {len(harmful)} harmful + {len(benign)} benign (en)", flush=True)
 
-    resolved = _resolve_aya(aya_dir)
-    print(f"aya model dir: {resolved}", flush=True)
+    resolved = _resolve_translate_model(config)
+    print(f"translation model dir: {resolved}", flush=True)
     translator = AyaTranslator.from_pretrained(
         resolved, backend=backend, max_new_tokens=int(config.get("max_new_tokens", 512)),
-        tensor_parallel_size=int(config.get("tensor_parallel_size", 2)))
+        tensor_parallel_size=int(config.get("tensor_parallel_size", 1)))
 
     translations, report = translate_core(
         en_all, translator, forms=forms,
@@ -139,11 +148,11 @@ def _dataset_card(manifest, prov: dict) -> str:
         f"- forms: {manifest.by_form}\n- categories: {manifest.by_category}\n"
         f"- sources: {manifest.by_source}\n\n"
         f"Harmful seeds: HarmBench (standard) and StrongREJECT. Over-refusal: XSTest-safe "
-        f"and OR-Bench-Hard. Hinglish and Devanagari by Aya Expanse 8B with a "
+        f"and OR-Bench-Hard. Hinglish and Devanagari by tiny-aya (v1 translator) with a "
         f"back-translation agreement gate, pending native-speaker verification.\n\n"
         f"**Harmful prompts are gated.** Non-commercial safety research only "
         f"(Tiny Aya CC-BY-NC-4.0 + Cohere Labs AUP; sources under their own licences).\n\n"
-        f"Provenance: git `{prov.get('git_sha')}`, Aya `{prov.get('aya_model')}`.\n"
+        f"Provenance: git `{prov.get('git_sha')}`, translator `{prov.get('translate_model')}`.\n"
     )
 
 
