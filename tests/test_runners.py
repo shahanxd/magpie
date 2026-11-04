@@ -82,6 +82,23 @@ def test_extra_accounts_use_suffixed_variables():
     assert (c.username, c.token, c.account) == ("two", "tok2", 2)
 
 
+def test_build_data_job_attaches_aya_mirror():
+    job = JOBS["build_data"]()
+    meta = job.metadata("u")
+    assert meta["model_sources"] == ["cohereforai/aya-expanse/transformers/8b"]
+    assert job.config["worker"] == "magpie.runners.jobs.build_data"
+    assert job.entrypoint == "magpie.runners.jobs.launch:main"
+
+
+def test_l0_job_uses_shared_launcher():
+    job = JOBS["l0"]()
+    assert job.entrypoint == "magpie.runners.jobs.launch:main"
+    assert job.config["worker"] == "magpie.runners.jobs.l0"
+    assert set(job.metadata("u")["model_sources"]) == {
+        "cohere-labs/tiny-aya/transformers/fire/1",
+        "cohere-labs/tiny-aya/transformers/global/1"}
+
+
 def test_smoke_job_metadata():
     job = JOBS["smoke"]()
     assert isinstance(job, KernelJob)

@@ -123,6 +123,7 @@ class KernelJob:
     config: dict[str, Any] = field(default_factory=dict)
     models: list[str] = field(default_factory=lambda: ["fire"])  # keys of config.MODELS
     dataset_sources: list[str] = field(default_factory=list)
+    extra_model_sources: list[str] = field(default_factory=list)  # raw Kaggle model refs
     machine_shape: str = T4
     enable_internet: bool = True
     timeout_s: int = 3 * 3600
@@ -146,7 +147,8 @@ class KernelJob:
             "dataset_sources": list(self.dataset_sources),
             "competition_sources": [],
             "kernel_sources": [],
-            "model_sources": [MODELS[m]["kaggle_source"] for m in self.models],
+            "model_sources": ([MODELS[m]["kaggle_source"] for m in self.models]
+                              + list(self.extra_model_sources)),
         }
 
 
@@ -175,11 +177,30 @@ def smoke_job(**overrides: Any) -> KernelJob:
 def l0_job(**overrides: Any) -> KernelJob:
     """L0 + over-refusal on Fire and Global: the first robustness table (en)."""
     cfg = {"models": ["fire", "global"], "n_harmful": 150, "n_benign": 150,
-           "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0"}
+           "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0",
+           "worker": "magpie.runners.jobs.l0", "timeout_s": 3 * 3600}
     cfg.update(overrides)
-    # vLLM lives in an isolated venv (as in the smoke test); install it first.
-    return KernelJob(name="l0", entrypoint="magpie.runners.jobs.l0_launch:main", config=cfg,
-                     models=cfg["models"], timeout_s=3 * 3600)
+    # vLLM lives in an isolated venv; the shared launcher installs it.
+    return KernelJob(name="l0", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
+                     models=cfg["models"], timeout_s=cfg["timeout_s"])
+
+
+# Aya Expanse 8B is mirrored on Kaggle Models, so translation needs no HF token.
+AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b"
+
+
+@job("build_data")
+def build_data_job(**overrides: Any) -> KernelJob:
+    """Build the parallel core: translate the seeds to Hinglish/Devanagari with Aya."""
+    cfg = {"n_harmful": 200, "n_benign": 200, "forms": ["hing", "hi-Deva"],
+           "aya_model": "/kaggle/input", "back_translate": True, "max_new_tokens": 512,
+           "seed": 0, "vllm_spec": "vllm==0.33.0", "worker": "magpie.runners.jobs.build_data",
+           "timeout_s": 4 * 3600}
+    cfg.update(overrides)
+    # Attach Aya from the Kaggle Models mirror (no tiny-aya needed for this job).
+    return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
+                     models=[], extra_model_sources=[AYA_KAGGLE_SOURCE],
+                     timeout_s=cfg["timeout_s"])
 
 
 # ---------------------------------------------------------------------------
