@@ -14,7 +14,7 @@
 - Fire becomes the main target
 - everything moved to free compute and free judges
 - the prediction study now works at the level of individual prompts (more statistical power)
-- Claude runs the pipeline end to end
+- the pipeline is automated end to end: code, GPU runs (Kaggle API) and publishing (HF API)
 
 ---
 
@@ -149,7 +149,7 @@ On-device means the weights are public. Each level is a superset of the one befo
 
 Urdu, Arabic, Roman Urdu and Arabizi are left for later. The pipeline is language-agnostic, so they can be added for a paper.
 
-**Why keep one Devanagari control?** It is cheap (Claude translates, the team verifies), and it answers two questions. (1) Is Hinglish weaker because it is *romanized* or because it is *code-mixed*? (2) It is where the verified SafeTune BoN gap actually shows up.
+**Why keep one Devanagari control?** It is cheap (LLM-assisted translation, verified by the team), and it answers two questions. (1) Is Hinglish weaker because it is *romanized* or because it is *code-mixed*? (2) It is where the verified SafeTune BoN gap actually shows up.
 
 ### 5.2 Datasets (all free; licences listed in the article)
 
@@ -164,7 +164,7 @@ Urdu, Arabic, Roman Urdu and Arabizi are left for later. The pipeline is languag
 | Fine-tune attack data | BeaverTails harmful subset (CC-BY-NC) in en + Hinglish | 10–500 | L3 steps-to-break |
 
 ### 5.3 How the data is built (free)
-- **Translation and Hinglish generation:** Claude (this session) translates the seed sets into Hinglish (natural code-mixing, several spelling styles) and Devanagari. Batched, so it fits the Claude plan's usage limits.
+- **Translation and Hinglish generation:** LLM-assisted translation (Claude) of the seed sets into Hinglish (natural code-mixing, several spelling styles) and Devanagari, then native-speaker verification. The dataset card names the LLM used.
 - **Fallback:** Aya Expanse 8B run locally on Kaggle.
 - **CuratorKIT pipeline:** dedup (MinHash) → back-translation agreement gate → diversity gate → provenance manifest + `rejected.jsonl` → HF dataset export.
 - **Native verification:** the team checks ≥15% of each set and 100% of the gold set.
@@ -190,7 +190,7 @@ Urdu, Arabic, Roman Urdu and Arabizi are left for later. The pipeline is languag
 **L1c, BoN on the input** (N ≤ 128–256, early-stopped; fit `−log ASR(N) = a·N^(−b)` and extrapolate to 10k with CIs):
 - (i) the SafeTune defaults (synthetic noise)
 - (ii) **natural Hinglish variation**:
-  - spelling variants from a variant lexicon (Claude-built, team-verified)
+  - spelling variants from a variant lexicon (LLM-drafted, team-verified)
   - vowel dropping / SMS shorthand
   - English↔Hindi swaps of content words
   - transliteration variants (`w/v`, `ee/i`, `aa/a`)
@@ -243,7 +243,7 @@ Every judged output goes through this pipeline:
 2. **J1, local open-weight judge on the original text:** **Llama-Guard-3-8B** (free, gated) or **WildGuard-7B** via the SafeTune judge registry, on Kaggle.
 3. **J2, judge on an English translation:** Hinglish → English with Aya Expanse 8B run locally (free, and a permitted Cohere model), then the **StrongREJECT fine-tuned scorer** (`TamperBenchEvaluator.score_responses`) plus WildGuard.
 4. **J3, free API tier as a third opinion (gold subset only):** e.g. Groq or Gemini free tiers, rate-limited, used only if their terms allow it.
-5. **Gold set:** ~500 outputs, stratified by model × form × judge disagreement. Labelled by the **3 native speakers** (150 double-annotated, giving Cohen's κ), with **Claude as an additional expert annotator** (reported as one annotator, not as the pipeline judge, since it can't be reproduced outside this session).
+5. **Gold set:** ~500 outputs, stratified by model × form × judge disagreement. Labelled by the **3 native speakers** (150 double-annotated, giving Cohen's κ), with **an LLM (Claude) as an additional rater**, reported separately from the human labels and not used as the pipeline judge.
 
 **Analysis:**
 - judge-vs-human confusion per form
@@ -316,7 +316,7 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 
 ---
 
-## 12. Free compute and how Claude runs it end to end
+## 12. Free compute and the automated run loop
 
 **Sources ($0):**
 - **Kaggle:** 30 GPU-h/week **per account** (2×T4 or P100); Tiny Aya is mirrored on Kaggle Models, so no HF token is needed. This is the main workhorse.
@@ -327,16 +327,16 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 
 **Estimate:** ≈ **30–35 T4-hours** for the core tier (fewer forms than v1). That is about two Kaggle accounts for one week.
 
-**End-to-end loop (verified: this cloud session can reach kaggle.com, huggingface.co, PyPI, Groq):**
-1. I write the code and tests, run CPU tests here, and push to GitHub.
-2. For GPU work, I generate a Kaggle notebook and **push it with the Kaggle API (GPU on, internet on)**, poll until it finishes, pull the outputs back, analyse them, and commit.
-3. I publish datasets, models and the Space to HF with the HF API.
+**Automated loop (verified: our dev environment can reach kaggle.com, huggingface.co, PyPI, Groq):**
+1. Code and CPU tests run in the dev environment and CI; changes go to GitHub.
+2. GPU jobs are generated as Kaggle notebooks and **pushed with the Kaggle API (GPU on, internet on)**; the runner polls until they finish, pulls the outputs back for analysis, and commits them.
+3. Datasets, models and the Space are published with the HF API.
 
-**What the team does:**
+**Manual steps:**
 - add the secrets below (once)
 - native-language checks and the annotation sprint (~2–3 h each)
 - Colab "Run all" if Kaggle quota runs out
-- the 3050 laptop runs (or fix Remote Control so this session can use the laptop; its folders aren't currently offered to cloud sessions)
+- the 3050 laptop runs
 - registration, Discord, gated-model acceptance
 - presenting on Demo Day
 
@@ -358,7 +358,7 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 | Day | Date | Work | Gate |
 |---|---|---|---|
 | D0 | Nov 4 | Plan approved. **All 3 register** (closes Nov 5). Discord + idea-validation ticket. Accept Tiny Aya licences. Add secrets. Repo scaffold + CI. | approved; registered; secrets set |
-| D1 | Nov 5 | Seed selection; Claude writes Hinglish/Devanagari translations; CuratorKIT gates; team spot-checks; Kaggle runner works end to end; L0 + over-refusal on M0/M1; **commit PREREGISTRATION.md** | L0 table |
+| D1 | Nov 5 | Seed selection; LLM-assisted Hinglish/Devanagari translations; CuratorKIT gates; team spot-checks; Kaggle runner works end to end; L0 + over-refusal on M0/M1; **commit PREREGISTRATION.md** | L0 table |
 | D2 | Nov 6 | Launch hardening M2/M3(/M4) on Kaggle; L1a/b; judge pipeline + refusal lexicon; Hinglish variant lexicon + augmenters + tests | hardening running; judges live |
 | D3 | Nov 7 | BoN (synthetic vs natural; decoding) on M0; prefill depth; refusal margins; build injection suite | first power-law fits |
 | D4 | Nov 8 | L0–L2 on M2–M5; abliteration on all; injection runs; GGUF on the 3050 | L0–L2 complete |
@@ -378,8 +378,11 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 ---
 
 ## 14. Team and working model
-- **Claude:** end-to-end owner of code, runs (via Kaggle/HF APIs), analysis and drafts.
-- **Team (3):** native verification and annotation, scientific review of each day's gate, Colab and laptop runs when needed, Demo Day presentation. We split coding only when it's faster.
+Each module has an owner, who also authors its commits:
+- **R1, Attacks & infra:** `magpie/attacks`, `serve`, `runners`, `defenses`; GPU runs.
+- **R2, Data, languages & judges:** `magpie/data`, `judges`; Hinglish verification; annotation sprint.
+- **R3, Mechanisms, analysis & story:** `magpie/mech`, `analysis`; figures; HF article; Space; Demo Day lead.
+- Everyone: native checks, the annotation sprint, review of each day's gate.
 - A daily 10-minute check-in on the day's gate and scope cuts.
 
 ---
@@ -415,7 +418,7 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 | A SafeTune defense won't train on Tiny Aya | Keep M0, M1, M5 + one defense; file the issue upstream (feedback is a stated goal) |
 | Local judges are weak on Hinglish | Translate-then-judge, the gold set and calibration (this becomes C4) |
 | Kaggle quota runs out | More accounts → Colab → SageMaker; cut plus tier first |
-| Claude plan usage limits | Batch translations and annotation; Aya Expanse 8B as translation fallback |
+| LLM usage limits for translation | Batch translations; Aya Expanse 8B (local) as fallback |
 | H4 fails | Report it; C1, C2, C4, C5 still stand |
 | Time | v1 submitted Nov 12; strict daily gates |
 
