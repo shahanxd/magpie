@@ -17,10 +17,6 @@ ext/
 
 # Results: aggregates are committed, raw text is not.
 # Completions on harmful prompts are gated on HF (PLAN §16), never committed here.
-results/**/attempts*.jsonl
-results/**/completions*
-results/**/raw/
-results/**/*.parquet
 
 # Model weights and heavy artifacts never go in git (attacked weights are never published).
 artifacts/
@@ -30,6 +26,8 @@ artifacts/
 *.pt
 
 # L0/attack raw outputs pulled from kernels (harmful completions) stay gitignored.
-results/**/raw/
-results/**/attempts_*.jsonl
-results/**/_l0_config.json
+
+# Run outputs are reproducible artifacts, not source. Harmful completions live
+# only here (and the gated HF dataset), never in git. Keep the layout README.
+results/*
+!results/README.md
