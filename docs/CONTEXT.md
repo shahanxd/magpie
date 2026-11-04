@@ -74,7 +74,7 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
   | R1 Attacks & infra | `attacks`, `serve`, `runners`, `defenses` | _tbd_ | _tbd_ |
   | R2 Data, languages & judges | `data`, `judges` | _tbd_ | _tbd_ |
   | R3 Mechanisms, analysis & story | `mech`, `analysis`, article, Space | _tbd_ | _tbd_ |
-  | Owner (until filled) | all | shahanxd | shahanxd@gmail.com |
+  | Owner (until filled) | all | shahanxd | 137555891+shahanxd@users.noreply.github.com |
 
   Use per-commit identity: `git -c user.name=… -c user.email=… commit …`. The email must be a verified address (or the GitHub noreply address) on that teammate's account.
 - Work on short-lived branches per stage; merge to `main`.
