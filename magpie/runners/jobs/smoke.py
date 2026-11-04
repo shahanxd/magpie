@@ -20,6 +20,12 @@ from typing import Any
 from magpie.runners.jobs.common import env_report, find_model_dir, run_cmd, write_json
 
 VENV = Path("/tmp/venv-vllm")
+# The kernel bootstrap unpacks the magpie source here and puts it on PYTHONPATH.
+# Subprocesses in the fresh vLLM venv get PYTHONPATH=SRC only (plus no user-site),
+# so magpie imports but Kaggle's sitecustomize (which needs `wrapt`) does not load
+# and pollute stdout.
+SRC = "/tmp/magpie_src"
+VENV_ENV = {"PYTHONPATH": SRC, "PYTHONNOUSERSITE": "1"}
 
 
 def _install_vllm(spec: str, out: Path) -> dict[str, Any]:
@@ -33,21 +39,29 @@ def _install_vllm(spec: str, out: Path) -> dict[str, Any]:
         return {"ok": False, "stage": "venv", **venv}
     inst = run_cmd([sys.executable, "-m", "uv", "pip", "install", "--python",
                     str(VENV / "bin" / "python"), spec],
-                   out / "logs" / "vllm_install.log", timeout=1800)
+                   out / "logs" / "vllm_install.log", timeout=1800, env=VENV_ENV)
     return {"ok": inst["returncode"] == 0, "stage": "install", "spec": spec,
             "seconds": inst["seconds"], "returncode": inst["returncode"],
             "tail": inst["tail"][-1500:]}
 
 
-def _python_env_versions(python: str, out: Path, tag: str) -> dict[str, Any]:
+def _python_env_versions(python: str, out: Path, tag: str,
+                         env: dict[str, str] | None = None) -> dict[str, Any]:
     code = ("import json,torch,transformers;"
-            "print(json.dumps({'torch':torch.__version__,'cuda':torch.version.cuda,"
-            "'transformers':transformers.__version__,'gpu_ok':torch.cuda.is_available()}))")
-    r = run_cmd([python, "-c", code], out / "logs" / f"versions_{tag}.log", timeout=300)
-    try:
-        return json.loads(r["tail"].strip().splitlines()[-1])
-    except (IndexError, json.JSONDecodeError):
-        return {"error": r["tail"][-800:]}
+            "print('MAGPIE_VERSIONS ' + json.dumps({'torch':torch.__version__,"
+            "'cuda':torch.version.cuda,'transformers':transformers.__version__,"
+            "'gpu_ok':torch.cuda.is_available(),"
+            "'n_gpu':torch.cuda.device_count()}))")
+    r = run_cmd([python, "-c", code], out / "logs" / f"versions_{tag}.log", timeout=300, env=env)
+    # Scan for our tagged line; other libraries (and Kaggle's sitecustomize) may
+    # print warnings around it, so never trust position alone.
+    for line in reversed(r["tail"].splitlines()):
+        if line.startswith("MAGPIE_VERSIONS "):
+            try:
+                return json.loads(line[len("MAGPIE_VERSIONS "):])
+            except json.JSONDecodeError:
+                break
+    return {"error": r["tail"][-800:]}
 
 
 def main(config: dict[str, Any], out_dir: Path) -> None:
@@ -63,14 +77,15 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     summary["vllm_install"] = install
     venv_py = str(VENV / "bin" / "python")
     if install["ok"]:
-        summary["venv_versions"] = _python_env_versions(venv_py, out, "venv")
+        summary["venv_versions"] = _python_env_versions(venv_py, out, "venv", env=VENV_ENV)
 
     worker = ["-m", "magpie.runners.jobs.smoke_worker", "--model", model_dir,
               "--out", str(out), "--max-new-tokens", str(max_new)]
     venv_gpu_ok = install["ok"] and summary.get("venv_versions", {}).get("gpu_ok") is True
     if venv_gpu_ok:
         summary["vllm_run"] = run_cmd([venv_py, *worker, "--backend", "vllm"],
-                                      out / "logs" / "worker_vllm.log", timeout=2400)
+                                      out / "logs" / "worker_vllm.log", timeout=2400,
+                                      env=VENV_ENV)
 
     # HF path: in the venv when its torch sees the GPU (same stack as vLLM),
     # otherwise in Kaggle's system Python (ensure a transformers that knows cohere2).
@@ -83,7 +98,8 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
             out / "logs" / "transformers_upgrade.log", timeout=900)
     summary["hf_python"] = "venv" if hf_python == venv_py else "system"
     summary["hf_run"] = run_cmd([hf_python, *worker, "--backend", "hf", "--fp16-check"],
-                                out / "logs" / "worker_hf.log", timeout=3600)
+                                out / "logs" / "worker_hf.log", timeout=3600,
+                                env=VENV_ENV if venv_gpu_ok else None)
 
     for backend in ("vllm", "hf"):
         p = out / f"{backend}.json"

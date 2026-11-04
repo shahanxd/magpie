@@ -153,13 +153,16 @@ class AttackCost:
         }
 
 
-# Measured decode throughput (tokens/s) per reference device, filled in from the
-# smoke test. Conservative placeholders until the T4 numbers land; the runner
-# overwrites them from the real run and records the SHA.
+# Decode throughput (tokens/s) per reference device, for a-priori wall-clock
+# estimates only; a real run records measured latency and overrides these.
+# T4 is the measured HF-transformers single-stream rate from the day-1 smoke
+# test (git ae39951): Tiny Aya Fire fp16 on one T4, ~19.5 tok/s single stream,
+# ~135 tok/s at batch 10. vLLM (batched) is higher and is updated once measured.
 REFERENCE_THROUGHPUT: dict[str, float] = {
-    "T4": 40.0,  # tokens/s, Tiny Aya Fire fp16, single stream (placeholder)
-    "T4x2": 75.0,
-    "RTX3050": 18.0,  # Q4_K_M GGUF on the 4 GB laptop (placeholder)
+    "T4": 19.5,       # HF transformers, fp16, single stream (measured, smoke v1)
+    "T4_batch": 135.0,  # HF transformers, fp16, batch 10 (measured, smoke v1)
+    "T4x2": 135.0,    # vLLM tensor-parallel figure updated after smoke v2
+    "RTX3050": 18.0,  # Q4_K_M GGUF on the 4 GB laptop (placeholder, pending)
 }
 
 

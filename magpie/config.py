@@ -25,22 +25,24 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # Model registry (PLAN §4). Kaggle paths come from the Kaggle Models mirror
 # (``cohere-labs/tiny-aya``), so GPU notebooks need no HF token.
 MODELS: dict[str, dict[str, str]] = {
+    # Kaggle mounts model sources under /kaggle/input/models/<owner>/<model>/...;
+    # find_model_dir() searches for config.json too, so a changed mount still resolves.
     "fire": {
         "hf_id": "CohereLabs/tiny-aya-fire",
         "kaggle_source": "cohere-labs/tiny-aya/transformers/fire/1",
-        "kaggle_path": "/kaggle/input/tiny-aya/transformers/fire/1",
+        "kaggle_path": "/kaggle/input/models/cohere-labs/tiny-aya/transformers/fire/1",
         "role": "M0 main target (vendor-hardened, South-Asia variant)",
     },
     "global": {
         "hf_id": "CohereLabs/tiny-aya-global",
         "kaggle_source": "cohere-labs/tiny-aya/transformers/global/1",
-        "kaggle_path": "/kaggle/input/tiny-aya/transformers/global/1",
+        "kaggle_path": "/kaggle/input/models/cohere-labs/tiny-aya/transformers/global/1",
         "role": "M1 comparison (vendor's safest Tiny Aya)",
     },
     "base": {
         "hf_id": "CohereLabs/tiny-aya-base",
         "kaggle_source": "cohere-labs/tiny-aya/transformers/base/1",
-        "kaggle_path": "/kaggle/input/tiny-aya/transformers/base/1",
+        "kaggle_path": "/kaggle/input/models/cohere-labs/tiny-aya/transformers/base/1",
         "role": "pretrained base, reference for KL / safety depth",
     },
 }
