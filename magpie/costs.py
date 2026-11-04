@@ -159,10 +159,11 @@ class AttackCost:
 # test (git ae39951): Tiny Aya Fire fp16 on one T4, ~19.5 tok/s single stream,
 # ~135 tok/s at batch 10. vLLM (batched) is higher and is updated once measured.
 REFERENCE_THROUGHPUT: dict[str, float] = {
-    "T4": 19.5,       # HF transformers, fp16, single stream (measured, smoke v1)
+    "T4": 19.5,         # HF transformers, fp16, single stream (measured, smoke v1)
     "T4_batch": 135.0,  # HF transformers, fp16, batch 10 (measured, smoke v1)
-    "T4x2": 135.0,    # vLLM tensor-parallel figure updated after smoke v2
-    "RTX3050": 18.0,  # Q4_K_M GGUF on the 4 GB laptop (placeholder, pending)
+    "T4_vllm": 208.5,   # vLLM 0.33, fp16, batch (measured, smoke v2)
+    "T4x2": 208.5,      # vLLM on the 2xT4 box (single-GPU figure; TP updated later)
+    "RTX3050": 18.0,    # Q4_K_M GGUF on the 4 GB laptop (placeholder, pending)
 }
 
 
