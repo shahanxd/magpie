@@ -94,7 +94,10 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     for model_key in models:
         print(f"=== model {model_key} ===", flush=True)
         gen = _build_generator(model_key, backend_kind)
-        runner = AttackRunner(gen, judge, gen_cfg, chunk_size=64, run_id="l0",
+        # L0 has 1-2 variants per prompt, so batch generation across records
+        # (a per-record loop would send single prompts and waste the GPU).
+        runner = AttackRunner(gen, judge, gen_cfg, chunk_size=256,
+                              batch_across_records=True, run_id="l0",
                               git_sha=prov.get("git_sha", ""))
         attack = L0Direct(sampled=True, temperature=1.0, seed=seed)
         harm_run = runner.run(attack, harmful)

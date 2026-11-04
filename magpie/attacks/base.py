@@ -112,6 +112,8 @@ class AttackRunner:
         max_attempts: int | None = None,
         chunk_size: int = 16,
         early_stop: bool = True,
+        batch_across_records: bool = False,
+        max_variants_batched: int = 512,
         run_id: str = "",
         git_sha: str = "",
     ) -> None:
@@ -122,6 +124,13 @@ class AttackRunner:
         self.max_attempts = max_attempts
         self.chunk_size = max(1, chunk_size)
         self.early_stop = early_stop
+        # When True, materialise all records' variants and generate across
+        # records in big batches. Much faster for low-variant attacks (L0,
+        # templates) where per-record generation would send 1-2 prompts at a
+        # time and waste the GPU. It forgoes lazy early-stop, so it is bounded
+        # by ``max_variants_batched`` per record; keep it False for large BoN.
+        self.batch_across_records = batch_across_records
+        self.max_variants_batched = max_variants_batched
         self.run_id = run_id
         self.git_sha = git_sha
 
@@ -131,10 +140,15 @@ class AttackRunner:
         out = AttackRun(attack=attack.name, level=str(attack.level),
                         model=self.generator.name, fit_cost=fit_cost)
         try:
-            for record in records:
-                attempts, outcome = self._run_one(attack, record, amortised)
+            if self.batch_across_records:
+                attempts, outcomes = self._run_batched(attack, records, amortised)
                 out.attempts.extend(attempts)
-                out.outcomes.append(outcome)
+                out.outcomes.extend(outcomes)
+            else:
+                for record in records:
+                    attempts, outcome = self._run_one(attack, record, amortised)
+                    out.attempts.extend(attempts)
+                    out.outcomes.append(outcome)
         finally:
             attack.revert(self.generator)
         return out
@@ -197,6 +211,73 @@ class AttackRunner:
                         **record.covariates},
         )
         return attempts, outcome
+
+    def _run_batched(
+        self, attack: Attack, records: Sequence[PromptRecord], amortised_fit: AttackCost
+    ) -> tuple[list[Attempt], list[Outcome]]:
+        """Generate across all records in big batches, then do per-record survival.
+
+        Each record contributes up to ``max_variants_batched`` variants (expanded
+        by ``n_samples``). All requests are generated in one grouped-by-gen batch,
+        judged in chunks, then every record's attempts are walked in order to find
+        the first valid success. Equivalent to the per-record path for the
+        outcome; faster because the GPU sees large batches.
+        """
+        # Materialise (record_index, variant) pairs, capped per record.
+        flat: list[tuple[int, Variant, Request]] = []
+        per_record_counts: list[int] = []
+        for ri, record in enumerate(records):
+            n = 0
+            cap = self.max_attempts or self.max_variants_batched
+            for v in attack.variants(record, self.gen):
+                for _ in range(max(1, v.n_samples)):
+                    flat.append((ri, v, v.request))
+                    n += 1
+                if n >= cap:
+                    break
+            per_record_counts.append(n)
+
+        priced = self._generate_grouped_by_gen([(v, r) for _ri, v, r in flat])
+        # Build attempts, then judge in chunks (judges may batch GPU work).
+        per_record: list[list[Attempt]] = [[] for _ in records]
+        for (ri, variant, _req), (comp, cost) in zip(flat, priced, strict=True):
+            per_record[ri].append(Attempt(
+                prompt_id=records[ri].prompt_id, model=self.generator.name,
+                attack=attack.name, level=str(attack.level), form=records[ri].form,
+                prompt=variant.request.prompt, response=comp.full_text, params=variant.params,
+                cost=cost + variant.extra_cost, attempt_index=len(per_record[ri]),
+                seed=self.gen.seed, is_harmful_prompt=records[ri].is_harmful,
+                run_id=self.run_id, git_sha=self.git_sha,
+            ))
+        all_attempts = [a for rec in per_record for a in rec]
+        for i in range(0, len(all_attempts), self.chunk_size):
+            chunk = all_attempts[i:i + self.chunk_size]
+            self.judge.score(chunk, [records[0]] * len(chunk))  # record arg unused by judges
+        # Re-score with the correct record is unnecessary (judges use attempt+form),
+        # but is_success needs the real record; pass it below.
+        attempts_out: list[Attempt] = []
+        outcomes: list[Outcome] = []
+        for ri, record in enumerate(records):
+            cum = amortised_fit
+            first_success: Attempt | None = None
+            for a in per_record[ri]:
+                cum = cum + a.cost
+                a.cum_cost = cum
+                if (first_success is None and record.is_harmful
+                        and self.judge.is_success(a, record)):
+                    first_success = a
+                attempts_out.append(a)
+            anchor = first_success or (per_record[ri][-1] if per_record[ri] else None)
+            outcomes.append(Outcome(
+                prompt_id=record.prompt_id, model=self.generator.name, attack=attack.name,
+                form=record.form, level=str(attack.level), broken=first_success is not None,
+                cost_to_break=anchor.cum_cost.total_flops if anchor else 0.0,
+                queries_to_break=anchor.cum_cost.queries if anchor else 0,
+                n_attempts=len(per_record[ri]),
+                covariates={"category": record.category, "parallel_id": record.parallel_id,
+                            **record.covariates},
+            ))
+        return attempts_out, outcomes
 
     def _generate_grouped_by_gen(self, flat: list[tuple[Variant, Request]]):
         """Generate, batching requests that share a decoding config.

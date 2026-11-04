@@ -85,3 +85,27 @@ def test_full_scan_keeps_every_attempt_but_dates_death_at_first_success():
     assert len(run.attempts) == 8 and out.n_attempts == 8
     assert out.broken and out.queries_to_break == 3
     assert out.cost_to_break == run.attempts[2].cum_cost.total_flops
+
+
+def test_batched_matches_per_record_outcomes():
+    # The batched path must give the same per-record outcomes as the lazy path.
+    recs = [PromptRecord(prompt_id=f"p{i}", text=("TRIGGER" if i % 2 else "comply please"),
+                         is_harmful=True) for i in range(6)]
+    lazy = _runner(chunk_size=3).run(Rephrase(n=1, breaks_at=None), recs)
+    batched = AttackRunner(Generator(EchoBackend()), PrefixJudge(),
+                           GenerationConfig(max_new_tokens=32),
+                           batch_across_records=True).run(Rephrase(n=1, breaks_at=None), recs)
+    lz = {o.prompt_id: o.broken for o in lazy.outcomes}
+    bt = {o.prompt_id: o.broken for o in batched.outcomes}
+    assert lz == bt
+    assert len(batched.attempts) == 6  # one variant each, all generated
+    # Even-index prompts contain TRIGGER -> echo refuses -> not broken.
+    assert bt == {"p0": True, "p1": False, "p2": True, "p3": False, "p4": True, "p5": False}
+
+
+def test_batched_respects_max_variants():
+    recs = [PromptRecord(prompt_id="p", text="comply please", is_harmful=False)]
+    run = AttackRunner(Generator(EchoBackend()), PrefixJudge(),
+                       GenerationConfig(max_new_tokens=16), batch_across_records=True,
+                       max_variants_batched=3).run(Rephrase(n=10, breaks_at=None), recs)
+    assert run.outcomes[0].n_attempts == 3
