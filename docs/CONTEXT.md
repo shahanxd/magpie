@@ -2,7 +2,7 @@
 
 Read this together with `docs/PLAN.md` (plan v2) before doing any work. It records what has been decided, what has been checked, and what happens next.
 
-**Status (Nov 4, 2026):** plan v2 **approved**. Build phase starts now.
+**Status (Nov 4, 2026):** plan v2 **approved**; build phase **in progress**. Repo scaffold, cost model, serving layer (vLLM/HF/echo), the L0–L1 attacks, the multilingual judge + collapse guard, the Hinglish tools, the survival analysis, the Kaggle runner and the data loaders are committed with CPU CI green. The day-1 smoke test passed on a Kaggle T4 and `docs/PREREGISTRATION.md` is committed. The first L0 run on Fire/Global is underway. See §3 for the verified numbers.
 
 ---
 
@@ -52,6 +52,15 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - **CircuitKIT** supports Tiny Aya discovery (EAP, EAP-IG, …); experimental and gated.
 - **T4 has no bf16**, so run fp16 and check for numerical issues on day 1. Don't use the P100 (recent vLLM doesn't support it).
 
+### Verified in the build environment (Nov 4, from runs, not memory)
+- **Tiny Aya Fire config (from HF):** `cohere2`, 36 layers, hidden 2048, d_mlp 11008, 16 heads / 4 KV, head_dim 128, vocab 262144, embeddings tied → **P ≈ 3.349B** (matches the 3.35B tech-report figure; `magpie.costs` is built on this). Chat template adds a **~370-token** system preamble; generation EOS is `<|END_OF_TURN_TOKEN|>`, pad id 0.
+- **Smoke test on Kaggle T4 (fp16), both backends green in one run:** vLLM 0.33 **208 tok/s** batch (load ~160 s, CUDA-graph capture slow on Turing), HF transformers **123 tok/s** batch / ~18 tok/s single. **fp16 is numerically stable**: logits finite, max layer activation ~680 (×96 headroom under 65504), KL = 0.0000 and top-1 match vs an fp32 CPU reference, 0 degenerate outputs on en+Hinglish. Caveat: `torch.cuda.is_bf16_supported()` returns **True** on the T4 (emulated on Turing) — ignore it, use fp16.
+- **Kaggle env:** 2×T4 (15 GB each, sm_75, driver CUDA 13.0), system torch 2.11.0+cu130, Python 3.13, 32.9 GB RAM, ~21 GB free disk. vLLM 0.33 (pins torch 2.14) installs into an isolated venv in ~60 s; the HF fallback runs in system Python (it has `accelerate`, which the venv lacks). The model mounts at `/kaggle/input/models/cohere-labs/tiny-aya/transformers/<variant>/1`.
+- **Kaggle GPU quota:** 30 h/week on the owner's account, unused as of Nov 4. (More accounts wire in via `KAGGLE_*_2/_3`.)
+- **HF gated access (owner's token):** Fire, Global, Base, Aya-Expanse-8B, **Llama-Guard-3-8B**, WildGuard, HarmBench classifiers and the StrongREJECT scorer are **accessible**; Llama-Guard-3-1B and shieldgemma-2b are **still gated** (request if needed).
+- **Lexsi repos (PyPI):** safetune 0.1.12, auditkit 1.1.3, curatorkit 0.1.22, circuitkit 0.2.0; all install on Python 3.12. SafeTune's BoN augmentations and the 12-prefix English-only `StringMatchJudge` gap are confirmed in the 0.1.12 source.
+- **Seed sources (public, loaded live):** HarmBench standard **200** (GitHub CSV), StrongREJECT **313** (GitHub CSV), XSTest-safe **250**, OR-Bench-Hard **1k** (both HF, public). The walledai mirrors are gated; we use the canonical sources. A stratified core of 200 harmful seeds spreads ~22 per category across 9 unified categories.
+
 ## 4. Hackathon facts
 - Registration closes Nov 5 · submission **Nov 14, end of day (Anywhere on Earth)** (plan: v1 on Nov 12) · shortlist Nov 16 · prove-thesis window Nov 16–21 (+$200 HF credits) · Demo Day Nov 22.
 - Rubric: write-up clarity /10, practical usefulness /10, code quality /10, overall /100. Double-blind, multiple judges.
@@ -71,39 +80,39 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 
   | Role | Modules | GitHub | Commit email |
   |---|---|---|---|
-  | R1 Attacks & infra | `attacks`, `serve`, `runners`, `defenses` | _tbd_ | _tbd_ |
-  | R2 Data, languages & judges | `data`, `judges` | _tbd_ | _tbd_ |
-  | R3 Mechanisms, analysis & story | `mech`, `analysis`, article, Space | _tbd_ | _tbd_ |
-  | Owner (until filled) | all | shahanxd | 137555891+shahanxd@users.noreply.github.com |
+  | R1 Attacks & infra | `attacks`, `serve`, `runners`, `defenses` | Harsh | dahiyaharsh2005@gmail.com |
+  | R2 Data, languages & judges | `data`, `judges` | iHamza14 | 189707312+iHamza14@users.noreply.github.com |
+  | R3 Mechanisms, analysis & story | `mech`, `analysis`, article, Space | shahanxd | 137555891+shahanxd@users.noreply.github.com |
 
-  Use per-commit identity: `git -c user.name=… -c user.email=… commit …`. The email must be a verified address (or the GitHub noreply address) on that teammate's account.
+  Harsh commits with his primary email (`dahiyaharsh2005@gmail.com`); the other two use their GitHub noreply addresses. Per-commit identity is set with `git -c user.name=… -c user.email=… commit …`. The email must be a verified address (or the GitHub noreply address) on that teammate's account. Commit messages stay plain imperative English with **no trailers**.
 - Work on short-lived branches per stage; merge to `main`.
 - Status updates to the team are short and plain.
 - Never put secrets in code, notebooks, logs or chat. Read them from the environment.
 - Gate harmful completions on HF; never publish attacked weights.
 
-## 6. Next steps (build phase, D1 = Nov 5)
-1. **Scaffold:**
-   - `pyproject.toml` (Python 3.12, required by SafeTune)
-   - the package layout from PLAN §11
-   - `ruff` + `pytest`, GitHub Actions CPU CI, a `Makefile`
-   - CPU tests use a tiny random cohere2 config, as SafeTune's tests do
-2. **Kaggle runner** (`magpie/runners/kaggle.py`):
-   - auth from env, supporting both token styles
-   - build kernel metadata: GPU T4×2, internet on, model source `cohere-labs/tiny-aya`
-   - push, poll status, download outputs into `results/`
-   - **Smoke test:** load tiny-aya-fire in fp16 on a T4; generate 5 en + 5 hing prompts with vLLM (fall back to HF); log tokens/s and check fp16 stability.
-3. **Data v1:**
-   - pick 200 harmful seeds (StrongREJECT + HarmBench standard, stratified by category)
-   - over-refusal sets: XSTest safe + OR-Bench-Hard subset + a benign twin per seed
-   - translate to `hing` (several spelling styles) and `hi-Deva`; compute CMI
-   - CuratorKIT gates + provenance
-   - push as a **private** HF dataset (gating decided later)
-4. **Commit `docs/PREREGISTRATION.md`** (hypotheses from PLAN §2) **before** the main runs.
-5. L0 + over-refusal on Fire and Global; judge pipeline v0; first L0 table.
+## 6. Build-phase progress
+
+**Done (committed, CPU CI green):**
+- Scaffold: `pyproject.toml` (Python 3.12), the PLAN §11 package layout, `ruff` + `pytest`, GitHub Actions CPU CI, a `Makefile`, CPU tests on a tiny random cohere2 model.
+- Cost model (`magpie.costs`): FLOPs / queries / wall-clock on the real Tiny Aya Fire shape.
+- Serving (`magpie.serve`): one `generate()` over vLLM / HF / a scripted echo backend.
+- Attacks (`magpie.attacks`): the `Attack` interface + runner (cost logging, survival bookkeeping), L0 direct, L1 templates (en+hing), L1 input BoN (synthetic / natural-Hinglish / Devanagari control), L1 decoding BoN.
+- Judges (`magpie.judges`): multilingual refusal matcher + collapse guard + the `CompositeJudge` validity gate.
+- Hinglish (`magpie.data.hinglish`): CMI, romanization/shorthand variants, the natural-variation augmenter (C2).
+- Analysis (`magpie.analysis`): KM survival, bootstrap median, log-rank, Wilson ASR, BoN power-law fit, and result-table aggregation.
+- Runner (`magpie.runners.kaggle`): build/push/poll/pull private T4 kernels; the smoke job (**passed**) and the L0 job.
+- Data (`magpie.data`): seed loaders, harm taxonomy, stratification, parallel-core assembly.
+- `docs/PREREGISTRATION.md` committed before the runs.
+
+**Remaining (next):**
+1. **First L0 table** on Fire/Global (en) — run underway; add the model-judge (Llama-Guard-3-8B / WildGuard / StrongREJECT scorer) rescoring pass to replace the lexicon pre-filter in the headline numbers.
+2. **Hinglish + Devanagari translations** of the core via Aya Expanse 8B on Kaggle (free, permitted Cohere model) + team verification; compute CMI; CuratorKIT gates + provenance; push a **private** HF dataset.
+3. Hardening (M2 RR / M3 RepNoise / M5 CAST) on Kaggle via SafeTune; L1a/b; prefill depth; refusal margins.
+4. BoN power laws (synthetic vs natural vs Devanagari), abliteration, injection suite, then the Cox prediction study (H4).
 
 ## 7. Open items
-- Teammates' names, GitHub handles, commit emails, and who takes R1/R2/R3.
-- Discord idea-validation ticket.
-- Teammates' Kaggle tokens when needed.
+- Discord idea-validation ticket (owner).
+- Teammates' Kaggle tokens when the single 30 h/week quota gets tight (`KAGGLE_*_2/_3`).
+- Request Llama-Guard-3-1B / shieldgemma-2b access only if a lighter judge is wanted; the 8B judges are already accessible.
 - 3050 laptop: GGUF runs are done by the team (the dev environment can't reach the laptop).
+- Native-speaker verification + annotation sprint (team, §8 of the plan).
