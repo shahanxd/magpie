@@ -85,11 +85,18 @@ class AyaTranslator:
 
     @classmethod
     def from_pretrained(cls, model_dir: str = "CohereLabs/aya-expanse-8b",
-                        backend: str = "vllm", max_new_tokens: int = 512) -> AyaTranslator:
+                        backend: str = "vllm", max_new_tokens: int = 512,
+                        tensor_parallel_size: int = 2,
+                        gpu_memory_utilization: float = 0.90) -> AyaTranslator:
+        """Load Aya Expanse 8B. Default TP=2: 8B fp16 (~16 GB) needs both T4s."""
         from magpie.config import GenerationConfig
         from magpie.serve import Request, load_backend
 
-        be = load_backend(backend, model_dir, dtype="float16", max_model_len=2048)
+        kwargs: dict = {"dtype": "float16", "max_model_len": 2048}
+        if backend == "vllm":
+            kwargs["tensor_parallel_size"] = tensor_parallel_size
+            kwargs["gpu_memory_utilization"] = gpu_memory_utilization
+        be = load_backend(backend, model_dir, **kwargs)
         gen = GenerationConfig(max_new_tokens=max_new_tokens, temperature=0.0)
 
         def generate(prompts: Sequence[str]) -> list[str]:

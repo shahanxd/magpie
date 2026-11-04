@@ -93,8 +93,9 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
 
     resolved = _resolve_aya(aya_dir)
     print(f"aya model dir: {resolved}", flush=True)
-    translator = AyaTranslator.from_pretrained(resolved, backend=backend,
-                                               max_new_tokens=int(config.get("max_new_tokens", 512)))
+    translator = AyaTranslator.from_pretrained(
+        resolved, backend=backend, max_new_tokens=int(config.get("max_new_tokens", 512)),
+        tensor_parallel_size=int(config.get("tensor_parallel_size", 2)))
 
     translations, report = translate_core(
         en_all, translator, forms=forms,
