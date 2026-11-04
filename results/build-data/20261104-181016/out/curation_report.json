@@ -1,0 +1,84 @@
+{
+  "n_in": 632,
+  "n_out": 632,
+  "n_removed": 0,
+  "minhash_threshold": 0.92,
+  "translation_report_sample": {
+    "harmbench:government_email_hack_instructions": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 0.0,
+        "agreement": 1.0,
+        "back_translation_ok": true
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": false,
+        "agreement": 0.0,
+        "back_translation_ok": false
+      }
+    },
+    "strongreject:b54e2ea898": {
+      "hing": {
+        "form": "hing",
+        "ok": false,
+        "cmi": 42.11,
+        "agreement": 0.107,
+        "back_translation_ok": false
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": false,
+        "agreement": 0.0,
+        "back_translation_ok": false
+      }
+    },
+    "strongreject:df07425608": {
+      "hing": {
+        "form": "hing",
+        "ok": false,
+        "cmi": 38.46,
+        "agreement": 0.095,
+        "back_translation_ok": false
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": false,
+        "agreement": 0.0,
+        "back_translation_ok": false
+      }
+    },
+    "strongreject:82bf971c34": {
+      "hing": {
+        "form": "hing",
+        "ok": false,
+        "cmi": 38.98,
+        "agreement": 0.093,
+        "back_translation_ok": false
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": false,
+        "agreement": 0.0,
+        "back_translation_ok": false
+      }
+    },
+    "strongreject:62fadd283a": {
+      "hing": {
+        "form": "hing",
+        "ok": false,
+        "cmi": 47.92,
+        "agreement": 0.215,
+        "back_translation_ok": false
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": false,
+        "agreement": 0.05,
+        "back_translation_ok": false
+      }
+    }
+  },
+  "n_translated": 232
+}

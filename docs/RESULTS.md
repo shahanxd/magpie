@@ -34,3 +34,26 @@ survival curves measure next.
 **Next:** model-judge rescoring of this run; the Hinglish/Devanagari core and
 the same table per form; then L1 (templates, best-of-N) where the cost axis
 starts to move.
+
+## Data v1 — the parallel core
+
+**Run:** `results/build-data/20261104-181016/` · git `3149dd3` · translator:
+**tiny-aya Fire** on a Kaggle T4 (Aya Expanse is gated on Kaggle and did not
+mount). Pushed **private**: `huggingface.co/datasets/shahanxd/magpie-core-v1`.
+
+- **632 records** = 400 en + 188 Hinglish + 44 Devanagari, 286 harmful + 346
+  over-refusal, balanced ~30/category across 9 harm categories.
+- Back-translation agreement gate (token-overlap ≥ 0.25) pass rate:
+  **188/400 Hinglish, 44/400 Devanagari**. MinHash removed 0 (all distinct).
+
+**Honest finding.** tiny-aya Fire is a weak translator: median Hinglish **CMI is
+0** (most "Hinglish" came out monolingual, not code-mixed) and cross-script
+round-trip is poor, so the Devanagari yield is low. This is expected for a
+3.35B stopgap and is why the plan intends **Aya Expanse 8B + native-speaker
+verification**. Two concrete fixes for v2: (1) accept the Aya Expanse licence on
+Kaggle so it mounts, then re-run with `translate_model=aya`; (2) replace the
+crude token-overlap agreement proxy with an embedding similarity. The natural-
+variation augmenter (`magpie.data.hinglish`) adds code-mixing at attack time, so
+a low-CMI base is partly compensated, but a better base translator is the right
+upgrade before the native-verification sprint.
+
