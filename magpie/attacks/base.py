@@ -41,6 +41,9 @@ class Variant:
     params: dict = field(default_factory=dict)
     n_samples: int = 1
     extra_cost: AttackCost = field(default_factory=AttackCost)
+    # Per-variant decoding override (L0 greedy-vs-sampled, L1d decoding BoN).
+    # ``None`` uses the runner's default GenerationConfig.
+    gen_override: GenerationConfig | None = None
 
 
 @runtime_checkable
@@ -149,7 +152,7 @@ class AttackRunner:
             flat: list[tuple[Variant, Request]] = []
             for v in chunk:
                 flat.extend((v, v.request) for _ in range(max(1, v.n_samples)))
-            priced = self.generator.generate_priced([r for _, r in flat], self.gen)
+            priced = self._generate_grouped_by_gen(flat)
             batch: list[Attempt] = []
             for (variant, _req), (comp, cost) in zip(flat, priced, strict=True):
                 step_cost = cost + variant.extra_cost
@@ -194,6 +197,26 @@ class AttackRunner:
                         **record.covariates},
         )
         return attempts, outcome
+
+    def _generate_grouped_by_gen(self, flat: list[tuple[Variant, Request]]):
+        """Generate, batching requests that share a decoding config.
+
+        Most attacks use one GenerationConfig, so this is a single batched call;
+        L0 (greedy vs sampled) and L1d (decoding sweep) mix configs, so we group
+        by config to keep batching within each setting and preserve input order.
+        """
+        results: list = [None] * len(flat)
+        groups: dict[tuple, list[int]] = {}
+        for i, (variant, _req) in enumerate(flat):
+            gen = variant.gen_override or self.gen
+            key = (gen.max_new_tokens, gen.temperature, gen.top_p, gen.seed, gen.max_model_len)
+            groups.setdefault(key, []).append(i)
+        for idxs in groups.values():
+            gen = flat[idxs[0]][0].gen_override or self.gen
+            priced = self.generator.generate_priced([flat[i][1] for i in idxs], gen)
+            for i, pr in zip(idxs, priced, strict=True):
+                results[i] = pr
+        return [r for r in results if r is not None]
 
 
 def _chunked(it: Iterable[Variant], n: int) -> Iterator[list[Variant]]:
