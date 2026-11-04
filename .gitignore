@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Local tooling / scratch
+.kaggle-build/
+ext/
+*.log
+
+# Results: aggregates are committed, raw text is not.
+# Completions on harmful prompts are gated on HF (PLAN §16), never committed here.
+results/**/attempts*.jsonl
+results/**/completions*
+results/**/raw/
+results/**/*.parquet
+
+# Model weights and heavy artifacts never go in git (attacked weights are never published).
+artifacts/
+*.safetensors
+*.gguf
+*.bin
+*.pt

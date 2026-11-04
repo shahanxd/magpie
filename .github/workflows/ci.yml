@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cpu:
+    name: lint + CPU tests (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install (CPU torch + dev/hf/analysis extras)
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python torch --index-url https://download.pytorch.org/whl/cpu
+          uv pip install --python .venv/bin/python -e ".[dev,hf,analysis]"
+      - name: Lint
+        run: .venv/bin/python -m ruff check .
+      - name: Test
+        run: .venv/bin/python -m pytest -m "not gpu and not net"
