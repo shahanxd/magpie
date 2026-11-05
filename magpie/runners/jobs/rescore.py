@@ -58,9 +58,9 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     lex = LexiconJudge()
     lex.score(attempts, [PromptRecord(prompt_id=a.prompt_id, text="", form=a.form,
                                       is_harmful=a.is_harmful_prompt) for a in attempts])
-    from magpie.judges.safetune_judge import SafeTuneJudge
+    from magpie.judges.harmbench import HarmBenchJudge
 
-    model_judge = SafeTuneJudge(judge_name, tensor_parallel_size=config.get("tp", 2))
+    model_judge = HarmBenchJudge(tensor_parallel_size=config.get("tp", 2))
     model_judge.score(attempts, [None] * len(attempts))
 
     # Per-(model, form, prompt) grouping, ordered by attempt index for survival.

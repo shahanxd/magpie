@@ -41,3 +41,7 @@ __all__ += ["SafeTuneJudge"]
 from magpie.judges.bon_gate import BoNGate  # noqa: E402
 
 __all__ += ["BoNGate"]
+
+from magpie.judges.harmbench import HarmBenchJudge  # noqa: E402
+
+__all__ += ["HarmBenchJudge"]

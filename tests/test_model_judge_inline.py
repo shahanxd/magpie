@@ -55,7 +55,7 @@ def test_l0_inline_model_judge_writes_second_table(tmp_path, monkeypatch):
 
     monkeypatch.setattr(l0, "_load_prompts", fake_load)
     monkeypatch.setattr(l0, "_build_generator", fake_gen)
-    monkeypatch.setattr("magpie.judges.safetune_judge.SafeTuneJudge", ScriptedJudge)
+    monkeypatch.setattr("magpie.judges.harmbench.HarmBenchJudge", ScriptedJudge)
 
     out = tmp_path / "out"
     l0.main({"models": ["fire"], "max_new_tokens": 32, "model_judge": "harmbench"}, out)

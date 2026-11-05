@@ -256,6 +256,19 @@ def ablation_job(**overrides: Any) -> KernelJob:
                      models=model_keys, timeout_s=cfg["timeout_s"], pull_pattern=NO_WEIGHTS)
 
 
+@job("rescore")
+def rescore_job(**overrides: Any) -> KernelJob:
+    """HarmBench-rescore pulled attempts attached as a Kaggle dataset."""
+    ds = overrides.pop("attempts_dataset", None)
+    if not ds:
+        raise ValueError("rescore job needs attempts_dataset=<owner/slug>")
+    cfg = {"worker": "magpie.runners.jobs.rescore", "judge": "harmbench", "tp": 2,
+           "vllm_spec": "vllm==0.33.0", "timeout_s": 3 * 3600}
+    cfg.update(overrides)
+    return KernelJob(name="rescore", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
+                     models=[], dataset_sources=[ds], timeout_s=cfg["timeout_s"])
+
+
 @job("probe")
 def probe_job(**overrides: Any) -> KernelJob:
     """CPU-only: list what model sources actually mount (no GPU quota)."""
@@ -409,6 +422,26 @@ class KaggleRunner:
                 return run
             time.sleep(poll_s)
 
+    def upload_dataset(self, local_dir: Path, slug: str, title: str | None = None) -> str:
+        """Create or version a private Kaggle dataset from ``local_dir``; return its ref.
+
+        Used to ship pulled raw attempts into a HarmBench rescoring kernel. Writes
+        the required ``dataset-metadata.json``, then creates the dataset or, if it
+        already exists, a new version.
+        """
+        local = Path(local_dir)
+        ref = f"{self.username}/{slug}"
+        meta = {"title": (title or slug)[:50], "id": ref, "licenses": [{"name": "CC0-1.0"}]}
+        (local / "dataset-metadata.json").write_text(json.dumps(meta, indent=2))
+        try:
+            self.api.dataset_create_new(str(local), public=False, convert_to_csv=False,
+                                        dir_mode="zip")
+        except Exception as exc:  # already exists -> push a new version
+            if "already" not in str(exc).lower() and "409" not in str(exc):
+                self.api.dataset_create_version(str(local), version_notes="update",
+                                                convert_to_csv=False, dir_mode="zip")
+        return ref
+
     def pull(self, ref: str, dest: Path, file_pattern: str | None = None) -> list[str]:
         """Download the output files of the latest version of ``ref`` into ``dest``.
 
@@ -472,6 +505,11 @@ def main(argv: list[str] | None = None) -> int:
         sp = sub.add_parser(name)
         sp.add_argument("job")
         sp.add_argument("--dest", default=None)
+    rs = sub.add_parser("rescore")
+    rs.add_argument("run_dirs", nargs="+", help="result dirs with raw/attempts_*.jsonl")
+    rs.add_argument("--slug", default="magpie-attempts", help="Kaggle dataset slug to upload to")
+    rs.add_argument("--poll", type=int, default=30)
+    rs.add_argument("--no-wait", action="store_true")
     args = p.parse_args(argv)
 
     if args.cmd == "jobs":
@@ -482,6 +520,28 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "quota":
         print(json.dumps(runner.quota(), indent=2))
         return 0
+    if args.cmd == "rescore":
+        import shutil
+
+        stage = BUILD_DIR / "attempts-upload"
+        if stage.exists():
+            shutil.rmtree(stage)
+        stage.mkdir(parents=True)
+        n = 0
+        for rd in args.run_dirs:
+            raw = Path(rd) / "out" / "raw"
+            raw = raw if raw.is_dir() else Path(rd) / "raw"
+            tag = Path(rd).parent.name  # e.g. attack-l1-bon-input
+            for p_ in sorted(raw.glob("attempts_*.jsonl")):
+                shutil.copy(p_, stage / f"attempts_{tag}_{p_.stem[len('attempts_'):]}.jsonl")
+                n += 1
+        print(f"staged {n} attempt files from {len(args.run_dirs)} run(s)")
+        ref = runner.upload_dataset(stage, args.slug, title="Magpie attempts for rescoring")
+        print(f"uploaded dataset {ref}")
+        kjob = JOBS["rescore"](attempts_dataset=ref)
+        run = runner.run(kjob, poll_s=args.poll, wait=not args.no_wait)
+        print(json.dumps(asdict(run), indent=2))
+        return 0 if run.status in ("complete", "pushed") else 1
     if args.cmd in ("run", "build"):
         overrides: dict[str, Any] = {}
         for kv in args.set:

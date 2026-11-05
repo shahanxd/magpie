@@ -196,11 +196,11 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
 
 def _model_judge_table(judge_name, harmful_attempts, benign_attempts, record_by_id, out,
                        prov, seed, tp):
-    """Score attempts with the SafeTune model judge and write table_<judge>.*."""
-    from magpie.judges.safetune_judge import SafeTuneJudge
+    """Score attempts with the HarmBench model judge and write table_<judge>.*."""
+    from magpie.judges.harmbench import HarmBenchJudge
     from magpie.types import Outcome
 
-    judge = SafeTuneJudge(judge_name, tensor_parallel_size=tp)
+    judge = HarmBenchJudge(tensor_parallel_size=tp)
     judge.score(harmful_attempts, [None] * len(harmful_attempts))
 
     groups: dict[tuple, list] = {}
