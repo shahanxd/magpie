@@ -105,3 +105,16 @@ def test_synthetic_variant_determinism():
     r1, r2 = random.Random(5), random.Random(5)
     s = "the quick brown fox jumps over the lazy dog"
     assert synthetic_variant(s, r1, 0.5) == synthetic_variant(s, r2, 0.5)
+
+
+def test_l2_prefill_sweeps_k_with_assistant_prefix():
+    from magpie.attacks import L2Prefill
+
+    rec = PromptRecord(prompt_id="p", text="SUBJECT", form="en", is_harmful=False)
+    atk = L2Prefill(ks=(1, 2, 4))
+    variants = list(atk.variants(rec, GenerationConfig()))
+    assert [v.params["k"] for v in variants] == [1, 2, 4]
+    # Prefix grows with k and is a prefix of the opener (benign compliance opener).
+    prefixes = [v.request.assistant_prefix for v in variants]
+    assert prefixes[0] == "Sure," and prefixes[1] == "Sure, here" and len(prefixes[2].split()) == 4
+    assert all("SUBJECT" in v.request.prompt for v in variants)

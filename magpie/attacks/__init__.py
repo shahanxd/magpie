@@ -10,13 +10,14 @@ from magpie.attacks.l0_direct import L0Direct
 from magpie.attacks.l1_bon_decoding import L1BonDecoding
 from magpie.attacks.l1_bon_input import L1BonInput
 from magpie.attacks.l1_templates import L1Templates
+from magpie.attacks.l2_prefill import L2Prefill
 from magpie.attacks.l3_abliteration import L3Abliteration
 
 ATTACKS: dict[str, type[Attack]] = {
-    cls.name: cls for cls in (L0Direct, L1Templates, L1BonInput, L1BonDecoding, L3Abliteration)
+    cls.name: cls for cls in (L0Direct, L1Templates, L1BonInput, L1BonDecoding, L2Prefill, L3Abliteration)
 }
 
 __all__ = [
     "Attack", "AttackRun", "AttackRunner", "Judge", "Variant",
-    "L0Direct", "L1Templates", "L1BonInput", "L1BonDecoding", "L3Abliteration", "ATTACKS",
+    "L0Direct", "L1Templates", "L1BonInput", "L1BonDecoding", "L2Prefill", "L3Abliteration", "ATTACKS",
 ]

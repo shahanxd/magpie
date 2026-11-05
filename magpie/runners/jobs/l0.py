@@ -102,6 +102,7 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
 
     judge = LexiconJudge()
     if attack_name.startswith("l1_bon"):
+        # Only synthetic-noise BoN needs the word-floor / cipher-false-positive gate.
         from magpie.judges.bon_gate import BoNGate
         judge = BoNGate(judge, min_words=int(config.get("bon_min_words", 40)))
     all_outcomes = []
@@ -163,7 +164,7 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     print(rows_to_markdown(rows, attack_name), flush=True)
 
     # Best-of-N: emit the empirical ASR(N) curve and power-law fit per model (H2).
-    if attack_name.startswith("l1_bon"):
+    if attack_name.startswith("l1_bon") or attack_name == "l2_prefill":
         from magpie.analysis.aggregate import bon_power_law
 
         n_max = int(attack_params.get("n", config.get("max_attempts") or 128))
