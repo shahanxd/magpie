@@ -433,13 +433,21 @@ class KaggleRunner:
         ref = f"{self.username}/{slug}"
         meta = {"title": (title or slug)[:50], "id": ref, "licenses": [{"name": "CC0-1.0"}]}
         (local / "dataset-metadata.json").write_text(json.dumps(meta, indent=2))
+        # dir_mode="skip" stores the loose JSONL files directly (not a zip the
+        # kernel would have to unpack). Create the dataset, or version it if it
+        # already exists.
+        exists = False
         try:
+            self.api.dataset_status(ref)
+            exists = True
+        except Exception:  # noqa: BLE001 - not found -> create new
+            exists = False
+        if exists:
+            self.api.dataset_create_version(str(local), version_notes="update",
+                                            convert_to_csv=False, dir_mode="skip")
+        else:
             self.api.dataset_create_new(str(local), public=False, convert_to_csv=False,
-                                        dir_mode="zip")
-        except Exception as exc:  # already exists -> push a new version
-            if "already" not in str(exc).lower() and "409" not in str(exc):
-                self.api.dataset_create_version(str(local), version_notes="update",
-                                                convert_to_csv=False, dir_mode="zip")
+                                        dir_mode="skip")
         return ref
 
     def pull(self, ref: str, dest: Path, file_pattern: str | None = None) -> list[str]:
