@@ -19,6 +19,10 @@ from pathlib import Path
 # Reduce fragmentation OOMs on the 15 GB T4 (RepNoise holds harmful + noise
 # activations alongside the retain batch). Set before torch initialises CUDA.
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# Train on ONE T4. SafeTune's HF Trainer otherwise wraps the model in
+# DataParallel across both GPUs, which replicates it on GPU 0 and OOMs; the
+# 3.35B model fits one T4 at a small batch, and our RR loop is single-GPU too.
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 
 
 def main(argv: list[str] | None = None) -> int:
