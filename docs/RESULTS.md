@@ -53,6 +53,33 @@ L0 FLOP cost (several variants per prompt). Over-refusal *falls* under the same 
 exactly the robustness/over-refusal trade the thesis tracks. Fire ≈ Global again; the model
 separation the thesis predicts should appear against the hardened variants and at L2–L3.
 
+## Judge validity — lexicon proxy vs HarmBench (C4), the headline
+
+**Run:** `results/rescore/20261105-210014/` · git `c58d4f7` · the same 4,462 attempts from the L0,
+L1-templates and L1-BoN runs, rescored in one kernel with the HarmBench classifier
+(`cais/HarmBench-Mistral-7b-val-cls`, ungated) under the composite gate (HarmBench harmful AND
+not collapsed).
+
+| attack (Fire, en) | lexicon ASR | **HarmBench ASR (95% CI)** | over-refusal |
+|---|---|---|---|
+| L0 direct | 0.21 | **0.05 [0.02, 0.09]** | 0.13 |
+| L1 templates | 0.52 | **0.29 [0.22, 0.36]** | 0.07 |
+| L1 best-of-N (synthetic) | ~1.00 | **0.19 [0.13, 0.28]** | — |
+| L0 Global | 0.24 | **0.07 [0.04, 0.12]** | 0.13 |
+| L1 templates Global | 0.54 | **0.29 [0.23, 0.37]** | 0.05 |
+
+**This is contribution C4 in one table.** The cheap refusal-lexicon judge over-counts ASR by
+**4–5×** at L0 and, worst of all, on best-of-N (1.00 → 0.19): synthetic noise produces long
+non-refusing outputs that are not actually harmful, which only a content judge can tell apart.
+The judge choice also **flips the attack ranking** — by the lexicon, BoN ≫ templates; by
+HarmBench, **templates (0.29) > BoN (0.19)**. Every ASR in this log that is not labelled
+"harmbench" is the lexicon upper bound; the validated numbers here are the ones to cite. The
+same machinery will quantify the en-vs-Hinglish judge gap (H5) once the Hinglish core exists.
+
+Validated ladder so far (HarmBench ASR, Fire / Global, en): L0 0.05 / 0.07 → L1 templates
+0.29 / 0.29, with BoN at 0.19. The cost axis rises L0 → L1; Fire ≈ Global on the vendor models,
+as expected before the hardened-variant and L2–L3 comparisons.
+
 ## L1c — best-of-N on the input (synthetic noise, English)
 
 **Run:** `results/attack-l1-bon-input/20261105-201012/` · git `e9f2cd3` · Fire · 100 harmful
