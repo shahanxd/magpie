@@ -43,6 +43,11 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
         [sys.executable, "-m", "pip", "install", "-q", config.get("safetune_spec",
                                                                   "safetune==0.1.12")],
         out / "logs" / "safetune_install.log", timeout=1800)
+    # Kaggle ships torchao 0.10, which PEFT's LoRA dispatch rejects (needs >=0.16);
+    # uninstall it so LoRA injection works (the documented Tiny Aya quirk).
+    status["torchao_removed"] = run_cmd(
+        [sys.executable, "-m", "pip", "uninstall", "-y", "torchao"],
+        out / "logs" / "torchao_uninstall.log", timeout=300)
     status["system_versions"] = python_env_versions(sys.executable, out, "system")
 
     base = find_model_dir(config.get("base", "fire"))

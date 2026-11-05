@@ -90,6 +90,8 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     judge = LexiconJudge()
     all_outcomes = []
     all_benign_attempts = []
+    all_harmful_attempts: list = []  # with text, for an optional model-judge pass
+    record_by_id = {r.prompt_id: r for r in harmful}
     per_model_summary: dict[str, Any] = {}
 
     backend_kind = config.get("backend", "vllm")
@@ -108,6 +110,7 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
             benign_run = runner.run(attack, benign)
             all_outcomes += harm_run.outcomes
             all_benign_attempts += benign_run.attempts
+            all_harmful_attempts += harm_run.attempts
 
             write_outcomes(harm_run.outcomes, out / f"outcomes_{model_key}.jsonl")
             # Full attempts (with text) under raw/ only; a redacted copy is committable.
@@ -142,6 +145,57 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     write_json(out / "summary.json", {"provenance": prov, "per_model": per_model_summary,
                                       "n_rows": len(rows)})
     print(rows_to_markdown(rows, "L0"), flush=True)
+
+    # Optional validated-ASR pass: re-judge with an open model judge (HarmBench),
+    # rebuild outcomes under the composite gate (judge harmful AND not collapsed),
+    # and write a second table. The target model is already freed above.
+    mj = config.get("model_judge")
+    if mj and all_harmful_attempts:
+        try:
+            _model_judge_table(mj, all_harmful_attempts, all_benign_attempts,
+                               record_by_id, out, prov, seed, int(config.get("tp", 2)))
+        except Exception as exc:  # the lexicon table is already written; don't lose the run
+            import traceback
+
+            (out / "logs").mkdir(parents=True, exist_ok=True)
+            (out / "logs" / "model_judge_error.log").write_text(traceback.format_exc())
+            print(f"model judge {mj} FAILED: {exc}", flush=True)
+
+
+def _model_judge_table(judge_name, harmful_attempts, benign_attempts, record_by_id, out,
+                       prov, seed, tp):
+    """Score attempts with the SafeTune model judge and write table_<judge>.*."""
+    from magpie.judges.safetune_judge import SafeTuneJudge
+    from magpie.types import Outcome
+
+    judge = SafeTuneJudge(judge_name, tensor_parallel_size=tp)
+    judge.score(harmful_attempts, [None] * len(harmful_attempts))
+
+    groups: dict[tuple, list] = {}
+    for a in harmful_attempts:
+        groups.setdefault((a.model, a.form, a.attack, a.prompt_id), []).append(a)
+    outcomes = []
+    for (model, form, attack, pid), g in groups.items():
+        g.sort(key=lambda a: a.attempt_index)
+        rec = record_by_id.get(pid) or PromptRecord(prompt_id=pid, text="", form=form,
+                                                    is_harmful=True)
+        first = next((a for a in g if judge.is_success(a, rec)), None)
+        anchor = first or g[-1]
+        outcomes.append(Outcome(
+            prompt_id=pid, model=model, attack=attack, form=form, level=g[0].level,
+            broken=first is not None, cost_to_break=anchor.cum_cost.total_flops,
+            queries_to_break=anchor.cum_cost.queries, n_attempts=len(g),
+            covariates={"category": rec.category, **rec.covariates}))
+
+    rows = build_rows(outcomes, benign_attempts=benign_attempts, n_boot=2000, seed=seed)
+    # Write directly to table_<judge>.* so the lexicon table.* stays intact.
+    md = rows_to_markdown(rows, f"L0 ({judge_name} judge)")
+    (out / f"table_{judge_name}.md").write_text(md, encoding="utf-8")
+    write_json(out / f"table_{judge_name}.json", {
+        "name": f"L0 ({judge_name} judge)", "provenance": {**prov, "judge": judge_name},
+        "rows": [r.to_dict() for r in rows]})
+    write_outcomes(outcomes, out / f"outcomes_{judge_name}.jsonl")
+    print(md, flush=True)
 
 
 def _write_attempts(attempts, path: Path, include_text: bool) -> None:
