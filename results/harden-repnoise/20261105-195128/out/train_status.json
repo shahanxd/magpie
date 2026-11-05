@@ -1,0 +1,11 @@
+{
+  "method": "repnoise",
+  "model": "/kaggle/input/models/cohere-labs/tiny-aya/transformers/fire/1",
+  "n": 200,
+  "batch_size": 1,
+  "lr": 0.0001,
+  "max_len": 512,
+  "checkpoint": "/kaggle/working/ckpt/fire_repnoise",
+  "seconds": 553.0,
+  "peak_gpu_gb": 11.17
+}

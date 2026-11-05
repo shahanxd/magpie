@@ -68,10 +68,7 @@ That L0 is unchanged is the expected and desired result: RR hardening does **not
 behaviour or add L0 over-refusal. The thesis is that the hardened model costs more to break at
 L1–L3; the survival curves there are the next measurement.
 
-**M3 RepNoise** OOMed training on one 15 GB T4 (the 3.35B model at batch 2 × 768 tokens). Retrying
-at batch 1 / max-len 512 with `expandable_segments`; if it still does not fit, the plan's fallback
-applies (keep M0, M1, M5 CAST + M2 RR as the defense set and file the RepNoise memory issue
-upstream). RR already gives one trained defense for the H1 comparison.
+**M3 RepNoise** trained once pinned to a single T4 (DataParallel across both T4s had replicated the model on GPU 0 and OOMed): batch 1 / max-len 512, 11.2 GB peak, ~9 min. But it **destroyed the model**: all 300 L0 harmful outputs are degenerate repeats (ASR 0.00 *and* over-refusal 0.00 because the model can no longer produce coherent refusals either), which the collapse guard flagged automatically (low_diversity + repetition). This is a real robustness/utility failure — a defense that zeroes attack success by wrecking the model — and exactly the off-switch failure the guard exists to catch (C4). RepNoise on Tiny Aya needs hyperparameter tuning (deferred / upstream); the defense set keeps M0, M1, M2 RR and M5 CAST, per the plan's fallback.
 
 **Judge note.** ASR here is the lexical refusal proxy, applied consistently, so vendor-vs-hardened
 and across-level comparisons are valid. Validated HarmBench ASR is a separate rescoring pass
