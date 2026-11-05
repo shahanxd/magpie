@@ -53,6 +53,31 @@ L0 FLOP cost (several variants per prompt). Over-refusal *falls* under the same 
 exactly the robustness/over-refusal trade the thesis tracks. Fire ≈ Global again; the model
 separation the thesis predicts should appear against the hardened variants and at L2–L3.
 
+## L1c — best-of-N on the input (synthetic noise, English)
+
+**Run:** `results/attack-l1-bon-input/20261105-201012/` · git `e9f2cd3` · Fire · 100 harmful
+prompts · synthetic augmentations (Hughes et al.: random caps, ASCII noise, word scramble) ·
+N ≤ 64, early-stopped · power-law fit `−log ASR(N) = a·N^b`.
+
+ASR(N), empirical (fraction of prompts broken within the first N variants):
+
+| judge | N=1 | 2 | 4 | 8 | 16 | 32 | 64 | power law |
+|---|---|---|---|---|---|---|---|---|
+| lexicon | 0.07 | 0.75 | 0.94 | 0.97 | 0.99 | 1.00 | 1.00 | a=1.57, b=−1.93, r²=0.96 |
+| + BoN gate | 0.07 | 0.75 | 0.93 | 0.96 | 0.98 | 0.99 | 0.99 | a=0.91, b=−1.27, r²=0.89 |
+
+**Read, and a real caveat (C4).** The machinery works: a clean power law, exponent b ≈ −1.3 to
+−1.9, saturating by N≈16. But the ASR here is a **judge artifact as much as an attack result**.
+The jump 0.07 → 0.75 at N=2 is not short garble — the faithful BoN gate (>40-word floor, no
+cipher/decoding false-positives, not collapsed) barely moved it, because the perturbed outputs
+are long and coherent (up to ~168 words). What the lexicon judge cannot tell is whether those
+long non-refusals are *actually harmful*. That is exactly contribution C4: a cheap refusal judge
+saturates on best-of-N, so the true ASR needs the HarmBench content judge. **This BoN curve is
+the headline case for the validated-judge rescoring pass** (`magpie.judges.safetune_judge`),
+which is the next step; treat the numbers above as the lexicon upper bound, not the jailbreak
+rate. (Over-refusal under BoN is a separate benign-variation run, deferred with the Hinglish data
+for H2b.)
+
 ## Hardening (M2 RR, M3 RepNoise) — training and L0
 
 **M2 Circuit Breakers / RR** trained on Tiny Aya Fire (`results/harden-rr/20261105-153604/`,
