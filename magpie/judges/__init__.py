@@ -33,3 +33,7 @@ from magpie.judges.model_judge import (  # noqa: E402
 
 __all__ += ["ModelJudge", "ModelJudgeConfig", "JUDGE_MODELS", "parse_llama_guard",
             "parse_wildguard"]
+
+from magpie.judges.safetune_judge import SafeTuneJudge  # noqa: E402
+
+__all__ += ["SafeTuneJudge"]
