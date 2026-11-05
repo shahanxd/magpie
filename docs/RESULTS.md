@@ -35,6 +35,24 @@ survival curves measure next.
 the same table per form; then L1 (templates, best-of-N) where the cost axis
 starts to move.
 
+## L1a — jailbreak templates (English)
+
+**Run:** `results/attack-l1-templates/20261105-194721/` · git `b0a8d5d` · five template families
+(role-play, refusal suppression, prefix injection, past-tense, persona), lexicon judge, same 150
+harmful + 150 over-refusal core.
+
+| model  | ASR (L0 → L1) | median log₁₀ FLOPs (L0 → L1) | over-refusal (L0 → L1) |
+|--------|---------------|------------------------------|------------------------|
+| Fire   | 0.21 → **0.52** | 12.88 → 13.07 | 0.13 → 0.07 |
+| Global | 0.24 → **0.54** | 12.90 → 13.06 | 0.13 → 0.05 |
+
+**Read:** the first point where the cost axis moves. Ordinary jailbreak *structure* — no
+optimisation, five public template families — roughly doubles ASR over a direct ask, at ~1.5× the
+L0 FLOP cost (several variants per prompt). Over-refusal *falls* under the same templates
+("answer directly, no warnings" framing suppresses refusal on benign prompts too), which is
+exactly the robustness/over-refusal trade the thesis tracks. Fire ≈ Global again; the model
+separation the thesis predicts should appear against the hardened variants and at L2–L3.
+
 ## Hardening (M2 RR, M3 RepNoise) — training and L0
 
 **M2 Circuit Breakers / RR** trained on Tiny Aya Fire (`results/harden-rr/20261105-153604/`,

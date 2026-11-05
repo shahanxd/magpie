@@ -1,0 +1,45 @@
+{
+  "name": "l1_templates_core",
+  "n_records": 300,
+  "by_form": {
+    "en": 300
+  },
+  "by_category": {
+    "cyber": 17,
+    "harassment_hate": 17,
+    "illegal_goods": 17,
+    "misinformation": 17,
+    "non_violent_crime": 17,
+    "other": 17,
+    "over_refusal": 150,
+    "sexual": 16,
+    "violence": 16,
+    "weapons_bio_chem": 16
+  },
+  "by_source": {
+    "harmbench_standard": 67,
+    "orbench_hard": 75,
+    "strongreject": 83,
+    "xstest_safe": 75
+  },
+  "n_harmful": 150,
+  "n_benign": 150,
+  "provenance": {
+    "git_sha": "b0a8d5d",
+    "git_dirty": false,
+    "python": "3.13.16",
+    "libraries": {
+      "torch": "2.14.0",
+      "transformers": "5.20.2",
+      "vllm": "0.33.0",
+      "curatorkit": "0.1.22"
+    },
+    "run_id": "l1_templates",
+    "models": [
+      "fire",
+      "global"
+    ],
+    "attack": "l1_templates",
+    "attack_params": {}
+  }
+}
