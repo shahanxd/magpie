@@ -126,6 +126,9 @@ class KernelJob:
     extra_model_sources: list[str] = field(default_factory=list)  # raw Kaggle model refs
     machine_shape: str = T4
     gpu: bool = True  # False = CPU-only kernel (costs no GPU quota)
+    # Regex a pulled output file must match (Kaggle SDK uses re.search). Used to
+    # leave model weights in Kaggle while pulling results.
+    pull_pattern: str | None = None
     enable_internet: bool = True
     timeout_s: int = 3 * 3600
 
@@ -206,6 +209,24 @@ def build_data_job(**overrides: Any) -> KernelJob:
     cfg.update(overrides)
     return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
                      models=["fire"], timeout_s=cfg["timeout_s"])
+
+
+# Pull everything except model weights (they stay in Kaggle for later kernels).
+NO_WEIGHTS = r"^(?!.*\.(?:safetensors|bin|pt|pth|gguf)$)"
+
+
+@job("harden")
+def harden_job(**overrides: Any) -> KernelJob:
+    """Harden Fire with SafeTune (method=rr | repnoise), then run L0 on it."""
+    cfg = {"method": "rr", "base": "fire", "n": 256, "steps": 150, "batch_size": 2,
+           "lr": 1e-4, "max_len": 768, "n_harmful": 150, "n_benign": 150,
+           "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0",
+           "safetune_spec": "safetune==0.1.12"}
+    cfg.update(overrides)
+    if cfg["method"] not in ("rr", "repnoise"):
+        raise ValueError(f"unknown hardening method {cfg['method']!r}")
+    return KernelJob(name=f"harden-{cfg['method']}", entrypoint="magpie.runners.jobs.harden:main",
+                     config=cfg, models=["fire"], timeout_s=6 * 3600, pull_pattern=NO_WEIGHTS)
 
 
 @job("probe")
@@ -361,14 +382,17 @@ class KaggleRunner:
                 return run
             time.sleep(poll_s)
 
-    def pull(self, ref: str, dest: Path) -> list[str]:
-        """Download every output file of the latest version of ``ref`` into ``dest``."""
+    def pull(self, ref: str, dest: Path, file_pattern: str | None = None) -> list[str]:
+        """Download the output files of the latest version of ``ref`` into ``dest``.
+
+        ``file_pattern`` keeps only matching files (e.g. :data:`NO_WEIGHTS`).
+        """
         dest.mkdir(parents=True, exist_ok=True)
         files: list[str] = []
         token: str | None = None
         while True:
-            got, token = self.api.kernels_output(ref, str(dest), force=True, quiet=True,
-                                                 page_token=token)
+            got, token = self.api.kernels_output(ref, str(dest), file_pattern=file_pattern,
+                                                 force=True, quiet=True, page_token=token)
             files.extend(got or [])
             if not token:
                 break
@@ -385,7 +409,7 @@ class KaggleRunner:
         if wait:
             run = self.wait(run, poll_s=poll_s, timeout_s=kjob.timeout_s + 3600, log=log)
             if run.status in ("complete", "error"):
-                files = self.pull(run.ref, dest)
+                files = self.pull(run.ref, dest, kjob.pull_pattern)
                 log(f"pulled {len(files)} file(s) into {run.output_dir}")
         dest.mkdir(parents=True, exist_ok=True)
         (dest / "_run.json").write_text(json.dumps(asdict(run), indent=2), encoding="utf-8")

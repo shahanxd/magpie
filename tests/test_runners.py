@@ -110,3 +110,22 @@ def test_smoke_job_metadata():
     assert meta["machine_shape"] == "NvidiaTeslaT4"
     assert meta["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
     assert JOBS["smoke"](max_new_tokens=16).config["max_new_tokens"] == 16
+
+
+def test_harden_job_and_weight_free_pulls():
+    import re
+
+    from magpie.runners.kaggle import NO_WEIGHTS
+
+    rr, rn = JOBS["harden"](), JOBS["harden"](method="repnoise")
+    assert rr.slug == "magpie-harden-rr" and rn.slug == "magpie-harden-repnoise"
+    assert rr.metadata("u")["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
+    assert rr.pull_pattern == NO_WEIGHTS
+    keep = [f for f in ["out/l0/table.md", "ckpt/fire_rr/config.json",
+                        "ckpt/fire_rr/model-00001-of-00002.safetensors", "out/x.bin"]
+            if re.search(NO_WEIGHTS, f)]
+    assert keep == ["out/l0/table.md", "ckpt/fire_rr/config.json"]
+    import pytest
+
+    with pytest.raises(ValueError):
+        JOBS["harden"](method="nope")

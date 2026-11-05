@@ -58,10 +58,12 @@ def _load_prompts(config: dict[str, Any]) -> tuple[list[PromptRecord], list[Prom
     return harmful, benign
 
 
-def _build_generator(model_key: str, backend_kind: str = "vllm") -> Generator:
+def _build_generator(model_key: str, backend_kind: str = "vllm",
+                     model_dirs: dict[str, str] | None = None) -> Generator:
     from magpie.serve import load_backend
 
-    model_dir = find_model_dir(model_key)
+    # A named checkpoint path (e.g. a hardened model) wins over the registry key.
+    model_dir = (model_dirs or {}).get(model_key) or find_model_dir(model_key)
     # vLLM when available (in the venv), else HF transformers — load_backend falls back.
     backend = load_backend(backend_kind, model_dir, dtype="float16", max_model_len=2048)
     # All Tiny Aya variants share the cohere2 3.35B shape; label by key.
@@ -95,7 +97,7 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
         print(f"=== model {model_key} ===", flush=True)
         gen = None
         try:
-            gen = _build_generator(model_key, backend_kind)
+            gen = _build_generator(model_key, backend_kind, config.get("model_dirs"))
             # L0 has 1-2 variants per prompt, so batch generation across records
             # (a per-record loop would send single prompts and waste the GPU).
             runner = AttackRunner(gen, judge, gen_cfg, chunk_size=256,
