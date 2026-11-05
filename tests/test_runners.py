@@ -129,3 +129,12 @@ def test_harden_job_and_weight_free_pulls():
 
     with pytest.raises(ValueError):
         JOBS["harden"](method="nope")
+
+
+def test_attack_job_runs_any_registered_attack():
+    j = JOBS["attack"](attack="l1_templates")
+    assert j.slug == "magpie-attack-l1-templates"
+    assert j.config["attack"] == "l1_templates" and j.config["worker"] == "magpie.runners.jobs.l0"
+    assert set(j.metadata("u")["model_sources"]) == {
+        "cohere-labs/tiny-aya/transformers/fire/1",
+        "cohere-labs/tiny-aya/transformers/global/1"}

@@ -189,6 +189,21 @@ def l0_job(**overrides: Any) -> KernelJob:
                      models=cfg["models"], timeout_s=cfg["timeout_s"])
 
 
+@job("attack")
+def attack_job(**overrides: Any) -> KernelJob:
+    """Run any registered attack (default l1_templates) on the vendor models + L0."""
+    attack = overrides.pop("attack", "l1_templates")
+    cfg = {"attack": attack, "models": ["fire", "global"], "n_harmful": 150, "n_benign": 150,
+           "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0",
+           "worker": "magpie.runners.jobs.l0", "timeout_s": 3 * 3600}
+    cfg.update(overrides)
+    models = cfg.get("models", ["fire", "global"])
+    model_keys = [m for m in models if m in MODELS]
+    return KernelJob(name=f"attack-{attack.replace('_', '-')}",
+                     entrypoint="magpie.runners.jobs.launch:main", config=cfg,
+                     models=model_keys, timeout_s=cfg["timeout_s"])
+
+
 # Aya Expanse 8B is mirrored on Kaggle Models, so translation needs no HF token.
 # Kaggle requires the version number in a model source ref.
 AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b/5"

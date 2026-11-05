@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import Any
 
 from magpie.analysis.aggregate import ResultBundle, build_rows, rows_to_markdown, write_outcomes
-from magpie.attacks import L0Direct
 from magpie.attacks.base import AttackRunner
 from magpie.config import GenerationConfig, provenance
 from magpie.costs import TINY_AYA_FIRE, CostModel
@@ -79,12 +78,22 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     gen_cfg = GenerationConfig(max_new_tokens=int(config.get("max_new_tokens", 192)),
                                temperature=0.0)
     seed = int(config.get("seed", 0))
-    prov = provenance(run_id="l0", models=models)
+    # Which attack to run (any in the registry). L0 batches across records;
+    # best-of-N keeps the lazy early-stopping path and a budget/attempt cap.
+    from magpie.attacks import ATTACKS
+
+    attack_name = config.get("attack", "l0_direct")
+    attack_params = dict(config.get("attack_params", {}))
+    attack_cls = ATTACKS[attack_name]
+    batched = attack_name in ("l0_direct", "l1_templates")
+    max_attempts = config.get("max_attempts")
+    prov = provenance(run_id=attack_name, models=models, attack=attack_name,
+                      attack_params=attack_params)
 
     harmful, benign = _load_prompts(config)
     from magpie.data.loaders import manifest_for
 
-    manifest_for("l0_core", harmful + benign, provenance=prov).write(out / "data_manifest.json")
+    manifest_for(f"{attack_name}_core", harmful + benign, provenance=prov).write(out / "data_manifest.json")
     print(f"loaded {len(harmful)} harmful, {len(benign)} benign", flush=True)
 
     judge = LexiconJudge()
@@ -100,12 +109,12 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
         gen = None
         try:
             gen = _build_generator(model_key, backend_kind, config.get("model_dirs"))
-            # L0 has 1-2 variants per prompt, so batch generation across records
-            # (a per-record loop would send single prompts and waste the GPU).
+            # Low-variant attacks (L0, templates) batch across records; best-of-N
+            # keeps the lazy, early-stopping path with a budget/attempt cap.
             runner = AttackRunner(gen, judge, gen_cfg, chunk_size=256,
-                                  batch_across_records=True, run_id="l0",
-                                  git_sha=prov.get("git_sha", ""))
-            attack = L0Direct(sampled=True, temperature=1.0, seed=seed)
+                                  batch_across_records=batched, max_attempts=max_attempts,
+                                  run_id=attack_name, git_sha=prov.get("git_sha", ""))
+            attack = attack_cls(**attack_params)
             harm_run = runner.run(attack, harmful)
             benign_run = runner.run(attack, benign)
             all_outcomes += harm_run.outcomes
@@ -138,13 +147,13 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
 
     # Always write a table from whatever models completed.
     rows = build_rows(all_outcomes, benign_attempts=all_benign_attempts, n_boot=2000, seed=seed)
-    bundle = ResultBundle("L0 (refusal_lexicon judge)", rows,
+    bundle = ResultBundle(f"{attack_name} (refusal_lexicon judge)", rows,
                           provenance={**prov, "judge": "refusal_lexicon", "level": "L0",
                                       "gen": {"max_new_tokens": gen_cfg.max_new_tokens}})
     bundle.write(out)
     write_json(out / "summary.json", {"provenance": prov, "per_model": per_model_summary,
                                       "n_rows": len(rows)})
-    print(rows_to_markdown(rows, "L0"), flush=True)
+    print(rows_to_markdown(rows, attack_name), flush=True)
 
     # Optional validated-ASR pass: re-judge with an open model judge (HarmBench),
     # rebuild outcomes under the composite gate (judge harmful AND not collapsed),
