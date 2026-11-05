@@ -155,6 +155,22 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
                                       "n_rows": len(rows)})
     print(rows_to_markdown(rows, attack_name), flush=True)
 
+    # Best-of-N: emit the empirical ASR(N) curve and power-law fit per model (H2).
+    if attack_name.startswith("l1_bon"):
+        from magpie.analysis.aggregate import bon_power_law
+
+        n_max = int(attack_params.get("n", config.get("max_attempts") or 128))
+        by_model = {}
+        for model_key in models:
+            outs = [o for o in all_outcomes if o.model == model_key]
+            if outs:
+                by_model[model_key] = bon_power_law(outs, n_max)
+        write_json(out / f"bon_powerlaw_{attack_params.get('source', 'synthetic')}.json",
+                   {"attack": attack_name, "params": attack_params, "by_model": by_model})
+        for m, pl in by_model.items():
+            print(f"BoN {m} {attack_params.get('source')}: asr_by_n={pl['asr_by_n']} "
+                  f"fit={pl['fit']}", flush=True)
+
     # Optional validated-ASR pass: re-judge with an open model judge (HarmBench),
     # rebuild outcomes under the composite gate (judge harmful AND not collapsed),
     # and write a second table. The target model is already freed above.

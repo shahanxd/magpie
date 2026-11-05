@@ -152,3 +152,30 @@ def write_outcomes(outcomes: Sequence[Outcome], path: Path) -> None:
     with path.open("w", encoding="utf-8") as f:
         for o in outcomes:
             f.write(json.dumps(o.to_dict(), ensure_ascii=False) + "\n")
+
+
+def bon_asr_curve(outcomes: Sequence[Outcome], n_values: Sequence[int]) -> dict[int, float]:
+    """ASR(N) for best-of-N: fraction of prompts broken within the first N variants.
+
+    Under early stopping a broken prompt's ``n_attempts`` is the 1-based index of
+    its first success, so it was broken within N iff ``n_attempts <= N``. This is
+    the empirical scaling curve the power-law fit consumes (H2).
+    """
+    total = len(outcomes)
+    if not total:
+        return {}
+    return {int(n): round(sum(1 for o in outcomes if o.broken and o.n_attempts <= n) / total, 4)
+            for n in n_values}
+
+
+def bon_power_law(outcomes: Sequence[Outcome], n_max: int) -> dict:
+    """Empirical ASR(N) over a log grid plus the fitted power law (H2)."""
+    from magpie.analysis.survival import fit_bon_power_law
+
+    grid = [n for n in (1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if n <= n_max]
+    if n_max not in grid:
+        grid.append(n_max)
+    curve = bon_asr_curve(outcomes, grid)
+    fit = fit_bon_power_law(curve)
+    return {"asr_by_n": curve, "n_max": n_max,
+            "fit": fit.__dict__ if fit is not None else None}

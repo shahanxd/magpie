@@ -107,3 +107,23 @@ def test_build_rows_pairs_asr_with_over_refusal(tmp_path):
     ResultBundle("L0", rows, {"git_sha": "x"}).write(tmp_path / "t")
     assert (tmp_path / "t" / "table.json").is_file()
     assert (tmp_path / "t" / "table.md").is_file()
+
+
+def test_bon_asr_curve_and_power_law():
+    from magpie.analysis.aggregate import bon_asr_curve, bon_power_law
+
+    # 10 prompts: break at attempt index 1,2,4,8,... (n_attempts), 3 censored.
+    outs = ([_out("a", True, 1e12)] * 1)  # n_attempts default 1
+    outs = []
+    for i, na in enumerate([1, 1, 2, 2, 4, 8, 16, 32]):
+        o = _out(f"b{i}", True, 10 ** 12)
+        o.n_attempts = na
+        outs.append(o)
+    for i in range(2):  # censored
+        o = _out(f"c{i}", False, 10 ** 13)
+        o.n_attempts = 64
+        outs.append(o)
+    curve = bon_asr_curve(outs, [1, 2, 4, 64])
+    assert curve[1] == 0.2 and curve[2] == 0.4 and curve[64] == 0.8
+    pl = bon_power_law(outs, 64)
+    assert pl["n_max"] == 64 and set(pl["asr_by_n"]) <= {1, 2, 4, 8, 16, 32, 64}
