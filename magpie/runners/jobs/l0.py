@@ -101,6 +101,9 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     print(f"loaded {len(harmful)} harmful, {len(benign)} benign", flush=True)
 
     judge = LexiconJudge()
+    if attack_name.startswith("l1_bon"):
+        from magpie.judges.bon_gate import BoNGate
+        judge = BoNGate(judge, min_words=int(config.get("bon_min_words", 40)))
     all_outcomes = []
     all_benign_attempts = []
     all_harmful_attempts: list = []  # with text, for an optional model-judge pass

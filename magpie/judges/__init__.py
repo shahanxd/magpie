@@ -37,3 +37,7 @@ __all__ += ["ModelJudge", "ModelJudgeConfig", "JUDGE_MODELS", "parse_llama_guard
 from magpie.judges.safetune_judge import SafeTuneJudge  # noqa: E402
 
 __all__ += ["SafeTuneJudge"]
+
+from magpie.judges.bon_gate import BoNGate  # noqa: E402
+
+__all__ += ["BoNGate"]
