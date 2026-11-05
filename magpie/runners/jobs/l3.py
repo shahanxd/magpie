@@ -47,7 +47,8 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
     status["worker"] = run_cmd(
         [sys.executable, "-m", "magpie.runners.jobs.l0", "--config", str(cfg_path),
          "--out", str(out)],
-        out / "logs" / "worker_l3.log", timeout=int(config.get("timeout_s", 4 * 3600)) - 300)
+        out / "logs" / "worker_l3.log", timeout=int(config.get("timeout_s", 4 * 3600)) - 300,
+        env={"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
     write_json(out / "l3_status.json", status)
     print(json.dumps({"attack": "l3_abliteration", "worker_rc": status["worker"]["returncode"]}),
           flush=True)

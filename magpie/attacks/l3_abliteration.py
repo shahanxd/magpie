@@ -66,7 +66,12 @@ class L3Abliteration(Attack):
         from safetune.instrumentation.evaluate.redteam.abliteration import AbliterationAttack
         from safetune.interventions.steer.refusal_direction import RefusalDirectionConfig
 
-        cfg = RefusalDirectionConfig(pick_layer=self.pick_layer)
+        # Pin extraction to the chosen layer: with pick_layer set, the validation
+        # sweep is bypassed, and target_layers=[pick_layer] caches activations for
+        # that one layer only (all 36 layers OOMs the direction fit on a T4).
+        cfg = RefusalDirectionConfig(
+            pick_layer=self.pick_layer,
+            target_layers=[self.pick_layer] if self.pick_layer is not None else None)
         harmful, harmless = self._contrast(tokenizer)
         self._attack = AbliterationAttack(model, tokenizer, config=cfg)
         self._attack.fit(harmful_prompts=harmful, harmless_prompts=harmless)
