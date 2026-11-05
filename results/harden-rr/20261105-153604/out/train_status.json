@@ -1,0 +1,19 @@
+{
+  "method": "rr",
+  "model": "/kaggle/input/models/cohere-labs/tiny-aya/transformers/fire/1",
+  "n": 256,
+  "batch_size": 2,
+  "lr": 0.0001,
+  "max_len": 768,
+  "steps": 150,
+  "target_layers": [
+    11,
+    22
+  ],
+  "loss_first": 5.0,
+  "loss_last": 0.49655,
+  "n_retain": 512,
+  "n_cb": 256,
+  "seconds": 850.8,
+  "peak_gpu_gb": 9.1
+}

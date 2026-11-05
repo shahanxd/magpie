@@ -35,6 +35,31 @@ survival curves measure next.
 the same table per form; then L1 (templates, best-of-N) where the cost axis
 starts to move.
 
+## Hardening (M2 RR, M3 RepNoise) — training and L0
+
+**M2 Circuit Breakers / RR** trained on Tiny Aya Fire (`results/harden-rr/20261105-153604/`,
+git `506c868`, Kaggle T4): 150 RR steps, LoRA on layers [11, 22] (the paper's 10/20 scaled to
+36), loss 5.0 → 0.50, peak 9.1 GB, ~14 min. Its L0 table matches vendor Fire:
+
+| model   | ASR (lexicon) | median log₁₀ FLOPs | over-refusal |
+|---------|---------------|--------------------|--------------|
+| fire    | 0.21          | 12.88              | 0.13         |
+| fire_rr | 0.21          | 12.88              | 0.13         |
+
+That L0 is unchanged is the expected and desired result: RR hardening does **not** regress L0
+behaviour or add L0 over-refusal. The thesis is that the hardened model costs more to break at
+L1–L3; the survival curves there are the next measurement.
+
+**M3 RepNoise** OOMed training on one 15 GB T4 (the 3.35B model at batch 2 × 768 tokens). Retrying
+at batch 1 / max-len 512 with `expandable_segments`; if it still does not fit, the plan's fallback
+applies (keep M0, M1, M5 CAST + M2 RR as the defense set and file the RepNoise memory issue
+upstream). RR already gives one trained defense for the H1 comparison.
+
+**Judge note.** ASR here is the lexical refusal proxy, applied consistently, so vendor-vs-hardened
+and across-level comparisons are valid. Validated HarmBench ASR is a separate rescoring pass
+(`magpie.judges.safetune_judge`); the inline two-model-in-one-process pass proved fragile on the
+T4, so rescoring runs as its own HarmBench-only kernel.
+
 ## Data v1 — the parallel core
 
 **Run:** `results/build-data/20261104-181016/` · git `3149dd3` · translator:
