@@ -12,8 +12,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from pathlib import Path
+
+# Reduce fragmentation OOMs on the 15 GB T4 (RepNoise holds harmful + noise
+# activations alongside the retain batch). Set before torch initialises CUDA.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 
 def main(argv: list[str] | None = None) -> int:
