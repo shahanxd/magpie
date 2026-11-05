@@ -64,7 +64,11 @@ def _build_generator(model_key: str, backend_kind: str = "vllm",
     # A named checkpoint path (e.g. a hardened model) wins over the registry key.
     model_dir = (model_dirs or {}).get(model_key) or find_model_dir(model_key)
     # vLLM when available (in the venv), else HF transformers — load_backend falls back.
-    backend = load_backend(backend_kind, model_dir, dtype="float16", max_model_len=2048)
+    # max_model_len is a vLLM-only knob; the HF backend does not take it.
+    kwargs = {"dtype": "float16"}
+    if backend_kind == "vllm":
+        kwargs["max_model_len"] = 2048
+    backend = load_backend(backend_kind, model_dir, **kwargs)
     # All Tiny Aya variants share the cohere2 3.35B shape; label by key.
     gen = Generator(backend, CostModel(TINY_AYA_FIRE, gpu="T4"))
     gen.backend.name = model_key  # table rows are keyed by the friendly model name

@@ -244,6 +244,18 @@ def harden_job(**overrides: Any) -> KernelJob:
                      config=cfg, models=["fire"], timeout_s=6 * 3600, pull_pattern=NO_WEIGHTS)
 
 
+@job("ablation")
+def ablation_job(**overrides: Any) -> KernelJob:
+    """L3a abliteration on the vendor models (HF backend; needs SafeTune)."""
+    cfg = {"models": ["fire", "global"], "n_harmful": 120, "n_benign": 0,
+           "max_new_tokens": 192, "seed": 0, "safetune_spec": "safetune==0.1.12",
+           "attack_params": {"pick_layer": 24, "n_contrast": 128}, "timeout_s": 4 * 3600}
+    cfg.update(overrides)
+    model_keys = [m for m in cfg["models"] if m in MODELS]
+    return KernelJob(name="ablation", entrypoint="magpie.runners.jobs.l3:main", config=cfg,
+                     models=model_keys, timeout_s=cfg["timeout_s"], pull_pattern=NO_WEIGHTS)
+
+
 @job("probe")
 def probe_job(**overrides: Any) -> KernelJob:
     """CPU-only: list what model sources actually mount (no GPU quota)."""
