@@ -125,6 +125,7 @@ class KernelJob:
     dataset_sources: list[str] = field(default_factory=list)
     extra_model_sources: list[str] = field(default_factory=list)  # raw Kaggle model refs
     machine_shape: str = T4
+    gpu: bool = True  # False = CPU-only kernel (costs no GPU quota)
     enable_internet: bool = True
     timeout_s: int = 3 * 3600
 
@@ -140,10 +141,10 @@ class KernelJob:
             "language": "python",
             "kernel_type": "script",
             "is_private": True,
-            "enable_gpu": True,
+            "enable_gpu": self.gpu,
             "enable_tpu": False,
             "enable_internet": self.enable_internet,
-            "machine_shape": self.machine_shape,
+            "machine_shape": self.machine_shape if self.gpu else "",
             "dataset_sources": list(self.dataset_sources),
             "competition_sources": [],
             "kernel_sources": [],
@@ -205,6 +206,17 @@ def build_data_job(**overrides: Any) -> KernelJob:
     cfg.update(overrides)
     return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
                      models=["fire"], timeout_s=cfg["timeout_s"])
+
+
+@job("probe")
+def probe_job(**overrides: Any) -> KernelJob:
+    """CPU-only: list what model sources actually mount (no GPU quota)."""
+    cfg = {"extra_sources": []}
+    cfg.update(overrides)
+    return KernelJob(name="probe", entrypoint="magpie.runners.jobs.probe:main", config=cfg,
+                     models=list(cfg.get("models", [])),
+                     extra_model_sources=list(cfg.get("extra_sources", [])),
+                     gpu=False, enable_internet=True, timeout_s=1800)
 
 
 # ---------------------------------------------------------------------------
@@ -305,7 +317,7 @@ class KaggleRunner:
     def push(self, kjob: KernelJob) -> KernelRun:
         folder, info = self.build(kjob)
         resp = self.api.kernels_push(str(folder), timeout=str(kjob.timeout_s),
-                                     acc=kjob.machine_shape)
+                                     acc=kjob.machine_shape if kjob.gpu else None)
         err = getattr(resp, "error", None)
         if err:
             raise RuntimeError(f"Kaggle rejected the push of {kjob.slug}: {err}")
