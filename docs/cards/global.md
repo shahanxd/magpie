@@ -14,7 +14,7 @@ mean more expensive to break.
 |---|---|---|---|
 | L0 direct | query only | **0.07** (HarmBench) | 12.9 |
 | L1 templates | query + public jailbreaks | **0.29** (HarmBench) | 13.1 |
-| L2 prefill | controls the decoder | 1.00 lexicon (1 token → **0.89**) | 12.6 |
+| L2 prefill | controls the decoder | **0.16** (HarmBench; lexicon 1.00, 1 token → 0.89) | 12.6 |
 | L3 abliteration | edits the weights | **0.68** (HarmBench) | 13.5 |
 
 ## Over-refusal (benign prompts)
@@ -24,8 +24,11 @@ Fire.
 
 ## Deployer guidance
 
-- **Fire ≈ Global at every level we measured.** Picking the "safer" vendor label buys ~no extra
-  cost-to-break; the real separation is attacker *capability* (L0→L3), not model choice.
+- **Fire ≈ Global at L0/L1/L3**, so picking the "safer" vendor label buys ~no extra cost-to-break
+  there; the real separation is attacker *capability* (L0→L3), not model choice. The one exception
+  is **prefill**, where Global is content-safer (0.16 vs Fire's 0.31) — but both are fully
+  bypassed by the *lexicon* (1.00), so this edge is invisible without a content judge and should
+  not be leaned on.
 - The prefill and weight-edit cautions from the Fire card apply unchanged: guard the decoder,
   assume weight access breaks the model.
 - Global was evaluated in English; the per-form (Hinglish/Devanagari) and best-of-N studies were

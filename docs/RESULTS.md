@@ -196,18 +196,22 @@ no prompt text and are committed; the direction is fit on disjoint data, never t
 **Run:** `results/attack-l2-prefill/20261105-222537/` · git `50f228c` · prefill the first k tokens
 of a benign compliance opener into the assistant turn, sweep k.
 
-Safety-depth curve — ASR(k), lexicon judge (HarmBench rescoring pending, like BoN):
+Safety-depth curve — ASR(k), lexicon judge, and the HarmBench-validated ASR
+(`results/rescore/20261106-060845/`):
 
-| model  | k=1 | k=2 | k=4+ |
-|--------|-----|-----|------|
-| Fire   | 0.80 | 0.98 | 1.00 |
-| Global | 0.89 | 1.00 | 1.00 |
+| model  | k=1 | k=2 | k=4+ (lexicon) | **ASR (HarmBench)** |
+|--------|-----|-----|------|------|
+| Fire   | 0.80 | 0.98 | 1.00 | **0.31 [0.23, 0.40]** |
+| Global | 0.89 | 1.00 | 1.00 | **0.16 [0.10, 0.23]** |
 
 **Read:** refusal is **shallow** (Qi et al.). A *single* forced compliance token takes ASR to
-0.80–0.89, and two tokens saturate it. A white-box attacker who can set the first word of the
-reply bypasses safety almost entirely, at essentially L0 cost (~10¹²·⁶ FLOPs). This is the
-safety-depth measurement feeding H4's "safety depth predicts prefill cost" (the depth here is ~1
-token — very shallow). Lexicon ASR is the upper bound as everywhere.
+0.80–0.89, and two tokens saturate it (lexicon). A white-box attacker who can set the first word of
+the reply bypasses *refusal* almost entirely, at essentially L0 cost (~10¹²·⁶ FLOPs). But the
+content judge is instructive: the forced-compliance opener yields a long non-refusing reply that is
+only *actually* harmful ~0.31 of the time (Fire) and ~0.16 (Global) — and notably the lexicon
+(1.00/1.00) hid that **Global is content-safer under prefill than Fire**, a separation only a
+content judge reveals (C4 again). The shallow depth (~1 token) is the measurement feeding H4's
+"safety depth predicts prefill cost."
 
 ## L3a — abliteration (weight access, English)
 
