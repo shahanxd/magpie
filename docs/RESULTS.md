@@ -227,7 +227,7 @@ the HarmBench validation is 0.68 (HarmBench) - the content judge trims the lexic
 safe to a direct ask and defenceless to an attacker who can edit the weights — exactly the
 on-device threat.
 
-## Hardening (M2 RR, M3 RepNoise) — training and L0
+## Hardening (M2 RR, M3 RepNoise) — does lightweight RR raise attacker cost? (no)
 
 **M2 Circuit Breakers / RR** trained on Tiny Aya Fire (`results/harden-rr/20261105-153604/`,
 git `506c868`, Kaggle T4): 150 RR steps, LoRA on layers [11, 22] (the paper's 10/20 scaled to
@@ -239,8 +239,32 @@ git `506c868`, Kaggle T4): 150 RR steps, LoRA on layers [11, 22] (the paper's 10
 | fire_rr | 0.21          | 12.88              | 0.13         |
 
 That L0 is unchanged is the expected and desired result: RR hardening does **not** regress L0
-behaviour or add L0 over-refusal. The thesis is that the hardened model costs more to break at
-L1–L3; the survival curves there are the next measurement.
+behaviour or add L0 over-refusal. The real question is whether it costs more to break at L1–L3.
+**It does not.** Re-attacking the merged `fire_rr` checkpoint paired against vendor Fire (same
+prompts, same seeds, one kernel each — `fire_rr` loaded by path from the harden kernel's output;
+runs `results/attack-l1-templates/20261106-022948/`, `results/attack-l2-prefill/20261106-023029/`,
+HarmBench rescores `results/rescore/20261106-054250/` and `.../20261106-030846/`):
+
+| level | attack | Fire ASR (lexicon) | fire_rr ASR (lexicon) | Fire ASR (HarmBench) | fire_rr ASR (HarmBench) |
+|---|---|---|---|---|---|
+| L0 | direct    | 0.21 | 0.21 | 0.05† | — |
+| L1 | templates | 0.51 | 0.50 | **0.30 [0.23, 0.39]** | **0.30 [0.23, 0.39]** |
+| L2 | prefill   | 1.00 | 1.00 | **0.31 [0.23, 0.40]** | **0.31 [0.23, 0.40]** |
+
+†Main-core English L0 (a different prompt set); fire_rr's L0 was lexicon-paired at 0.21, not
+separately HarmBench-rescored.
+
+**Read: this RR pass buys nothing measurable.** At every level and under both judges the hardened
+model is broken exactly as often as vendor Fire — L1 templates 0.30 vs 0.30, L2 prefill 0.31 vs
+0.31 — and the prefill safety-depth curve is byte-identical (k=1→0.80, k=2→0.98, k≥4→1.00 for
+both). The checkpoint is genuinely the hardened one: its L1 completions differ prompt-by-prompt
+from Fire's (so the merged weights loaded), it simply costs no more to break. This is a clean
+**negative for lightweight hardening measured as cost**: 150 RR steps on a 2-layer LoRA move
+neither the input-space (templates) nor the prefill (safety-depth) survival curve, and prefill in
+particular is a shallow-safety attack that representation-rerouting does not touch. It is exactly
+what the cost framing exists to surface — a defense that looks plausible (loss 5.0→0.50, L0 clean)
+yet shifts no survival curve. Moving the needle would need a much heavier RR schedule or a
+depth-targeted defense (Qi et al.); that, with M5 CAST, is the open defense work.
 
 **M3 RepNoise** trained once pinned to a single T4 (DataParallel across both T4s had replicated the model on GPU 0 and OOMed): batch 1 / max-len 512, 11.2 GB peak, ~9 min. But it **destroyed the model**: all 300 L0 harmful outputs are degenerate repeats (ASR 0.00 *and* over-refusal 0.00 because the model can no longer produce coherent refusals either), which the collapse guard flagged automatically (low_diversity + repetition). This is a real robustness/utility failure — a defense that zeroes attack success by wrecking the model — and exactly the off-switch failure the guard exists to catch (C4). RepNoise on Tiny Aya needs hyperparameter tuning (deferred / upstream); the defense set keeps M0, M1, M2 RR and M5 CAST, per the plan's fallback.
 
