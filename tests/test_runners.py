@@ -83,13 +83,14 @@ def test_extra_accounts_use_suffixed_variables():
 
 
 def test_build_data_job_attaches_translation_model():
-    job = JOBS["build_data"]()
-    meta = job.metadata("u")
-    # v1 uses tiny-aya Fire (ungated); Aya Expanse is gated on Kaggle.
-    assert meta["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
-    assert job.config["translate_model"] == "fire"
-    assert job.config["worker"] == "magpie.runners.jobs.build_data"
-    assert job.entrypoint == "magpie.runners.jobs.launch:main"
+    # Default: Aya Expanse (attached as an extra model source, TP=2).
+    aya = JOBS["build_data"]()
+    assert aya.metadata("u")["model_sources"] == ["cohereforai/aya-expanse/transformers/8b/5"]
+    assert aya.config["translate_model"] == "aya" and aya.config["tensor_parallel_size"] == 2
+    assert aya.config["worker"] == "magpie.runners.jobs.build_data"
+    # A tiny-aya variant attaches via the model registry instead.
+    fire = JOBS["build_data"](translate_model="fire", tensor_parallel_size=1)
+    assert fire.metadata("u")["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
 
 
 def test_l0_job_uses_shared_launcher():

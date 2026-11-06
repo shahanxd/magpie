@@ -204,7 +204,7 @@ def attack_job(**overrides: Any) -> KernelJob:
                      models=model_keys, timeout_s=cfg["timeout_s"])
 
 
-# Aya Expanse 8B is mirrored on Kaggle Models, so translation needs no HF token.
+# Aya Expanse 8B on the Kaggle Models mirror (needs a one-time licence accept);
 # Kaggle requires the version number in a model source ref.
 AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b/5"
 
@@ -213,17 +213,23 @@ AYA_KAGGLE_SOURCE = "cohereforai/aya-expanse/transformers/8b/5"
 def build_data_job(**overrides: Any) -> KernelJob:
     """Build the parallel core: translate the seeds to Hinglish/Devanagari.
 
-    v1 uses tiny-aya Fire (mounts freely on Kaggle; Aya Expanse is gated and
-    needs manual licence acceptance). Pass translate_model="aya" and
-    extra_model_sources to use Aya Expanse once its Kaggle licence is accepted.
+    translate_model="aya" uses Aya Expanse 8B (tensor-parallel over both T4s;
+    the quality translator); "fire"/"global"/"base" use a tiny-aya variant.
     """
     cfg = {"n_harmful": 200, "n_benign": 200, "forms": ["hing", "hi-Deva"],
-           "translate_model": "fire", "tensor_parallel_size": 1, "back_translate": True,
-           "max_new_tokens": 400, "seed": 0, "vllm_spec": "vllm==0.33.0",
+           "translate_model": "aya", "translate_model_hint": "aya-expanse",
+           "tensor_parallel_size": 2, "back_translate": True, "max_new_tokens": 400,
+           "seed": 0, "vllm_spec": "vllm==0.33.0",
            "worker": "magpie.runners.jobs.build_data", "timeout_s": 4 * 3600}
     cfg.update(overrides)
+    tm = cfg["translate_model"]
+    if tm in MODELS:
+        return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main",
+                         config=cfg, models=[tm], timeout_s=cfg["timeout_s"])
+    # Aya (or any non-tiny-aya translator): attach it as an extra model source.
     return KernelJob(name="build-data", entrypoint="magpie.runners.jobs.launch:main", config=cfg,
-                     models=["fire"], timeout_s=cfg["timeout_s"])
+                     models=[], extra_model_sources=[AYA_KAGGLE_SOURCE],
+                     timeout_s=cfg["timeout_s"])
 
 
 # Pull everything except model weights (they stay in Kaggle for later kernels).
