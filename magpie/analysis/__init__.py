@@ -26,3 +26,7 @@ __all__ = [
     "ResultBundle", "ResultRow", "build_rows", "rows_to_markdown",
     "write_attempts", "write_outcomes",
 ]
+
+from magpie.analysis.cox import cox_margin  # noqa: E402
+
+__all__ += ["cox_margin"]

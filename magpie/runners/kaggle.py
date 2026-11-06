@@ -269,6 +269,17 @@ def rescore_job(**overrides: Any) -> KernelJob:
                      models=[], dataset_sources=[ds], timeout_s=cfg["timeout_s"])
 
 
+@job("mech")
+def mech_job(**overrides: Any) -> KernelJob:
+    """Extract per-prompt refusal margins on a model (HF; needs SafeTune) for H4."""
+    cfg = {"model": "fire", "pick_layer": 24, "n_harmful": 100, "n_contrast": 64, "seed": 0,
+           "safetune_spec": "safetune==0.1.12", "timeout_s": 3 * 3600}
+    cfg.update(overrides)
+    key = cfg["model"] if cfg["model"] in MODELS else "fire"
+    return KernelJob(name=f"mech-{cfg['model']}", entrypoint="magpie.runners.jobs.mech:main",
+                     config=cfg, models=[key], timeout_s=cfg["timeout_s"], pull_pattern=NO_WEIGHTS)
+
+
 @job("probe")
 def probe_job(**overrides: Any) -> KernelJob:
     """CPU-only: list what model sources actually mount (no GPU quota)."""
