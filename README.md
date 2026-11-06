@@ -60,6 +60,11 @@ the environment and never from code. Tiny Aya is attached from the Kaggle Models
 
 ## Reproducibility
 
+- `make reproduce-core` rebuilds the hero figure and ladder from the committed `results/` tables
+  (CPU, offline); the full Kaggle T4 pipeline is documented step-by-step in
+  [`docs/REPRODUCE.md`](docs/REPRODUCE.md)
+- the write-up is in [`docs/ARTICLE.md`](docs/ARTICLE.md); every table with provenance in
+  [`docs/RESULTS.md`](docs/RESULTS.md); per-model robustness cards in [`docs/cards/`](docs/cards/)
 - fixed seeds everywhere
 - every result row carries a git SHA and a config hash ([`magpie/config.py`](magpie/config.py))
 - hypotheses are pre-registered in `docs/PREREGISTRATION.md` before the main runs

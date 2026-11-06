@@ -3,7 +3,7 @@ PY      ?= .venv/bin/python
 UV      ?= uv
 TORCH_CPU_INDEX ?= https://download.pytorch.org/whl/cpu
 
-.PHONY: help install lint format test test-all smoke clean
+.PHONY: help install lint format test test-all smoke reproduce-core clean
 
 help:  ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -27,6 +27,11 @@ test-all:  ## Everything, including network-marked tests
 
 smoke:  ## Push the T4 smoke-test kernel to Kaggle, wait, and pull results/
 	$(PY) -m magpie.runners.kaggle smoke
+
+reproduce-core:  ## CPU: run offline tests, then rebuild the hero figure from committed results/
+	$(PY) -m pytest -q -m "not gpu and not net"
+	$(PY) scripts/make_hero.py
+	@echo "Hero figure rebuilt from committed result tables. Full GPU pipeline: docs/REPRODUCE.md"
 
 clean:  ## Remove caches and build outputs
 	rm -rf .pytest_cache .ruff_cache .kaggle-build build dist *.egg-info
