@@ -153,7 +153,7 @@
   },
   "links": {
     "code": "https://github.com/shahanxd/magpie",
-    "dataset": "https://huggingface.co/datasets/shahanxd/magpie-core-v2"
+    "dataset": "https://huggingface.co/datasets/shahanxd/magpie-core-v1"
   },
   "source": "Generated from committed results by space/build_space_data.py; numbers mirror docs/RESULTS.md (HarmBench-validated)."
 }

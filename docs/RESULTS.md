@@ -83,7 +83,7 @@ as expected before the hardened-variant and L2–L3 comparisons.
 ## H1 — cost-to-break per form (English vs Hinglish vs Devanagari)
 
 **Run:** `results/attack-l0-direct/20261106-014044/` · git `a209356` · Fire · the v2 Aya parallel
-core (`shahanxd/magpie-core-v2`): the **same** 120 harmful + 80 benign seeds in all three forms,
+core (Kaggle `shahanxd/magpie-core-v2` = HF `shahanxd/magpie-core-v1`): the **same** 120 harmful + 80 benign seeds in all three forms,
 so a per-form difference is the form, not the content. L0 direct ask, greedy + one sampled draw.
 HarmBench rescore: `results/rescore/20261106-020352/`. Per-form verdict counts (no text) in the
 L0 run's `out/perform_verdict_breakdown.json`.

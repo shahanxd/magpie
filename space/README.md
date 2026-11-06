@@ -3,28 +3,39 @@ title: Magpie — Pricing Robustness
 emoji: 🐦
 colorFrom: indigo
 colorTo: green
-sdk: gradio
-sdk_version: 4.44.1
-app_file: app.py
-pinned: false
+sdk: static
+app_file: index.html
+pinned: true
 license: cc-by-nc-4.0
+short_description: Red-teaming Tiny Aya as attacker cost, in English + Hinglish
+tags:
+  - red-teaming
+  - ai-safety
+  - robustness
+  - hinglish
+  - multilingual
+  - lexsi-hackathon
 ---
 
-# Magpie — pricing the robustness of an open, on-device safety model
+# 🐦 Magpie — pricing the robustness of an open, on-device safety model
 
-An interactive view of the Magpie red-teaming study of Cohere Labs' Tiny Aya (Lexsi Hackathon,
-Track 2a): the attacker-cost ladder, the judge-validity headline, the honest hardening negative,
-the white-box audit (H4), and per-model robustness cards.
+**For an open model that ships on the phone, the attacker owns the weights — so the right safety
+number is not the refusal rate, but how much attacker effort a break costs, at each capability
+level, in the languages people actually use.**
 
-**This Space is self-contained and CPU-only** — it reads `data.json` and `hero_ladder.png` (both in
-this folder), which are generated from the committed results by `space/build_space_data.py` in the
-[GitHub repo](https://github.com/shahanxd/magpie). It runs no models.
+Magpie red-teams Cohere Labs' **Tiny Aya** (Fire/Global) across an attacker ladder — just ask →
+public jailbreaks → decoder prefill → weight edits — in English, Hinglish and Devanagari, judges
+every attempt with a content classifier, and tests whether a cheap white-box measurement predicts
+the cost of a break. Lexsi Hackathon, Track 2a.
 
-## To deploy
+**Open the 📄 Article tab for the full write-up**; the other tabs are interactive views of the
+results: the cost ladder, the judge-validity headline, the hardening negative, the H4 audit, and
+per-model robustness cards.
 
-1. Create a Gradio Space: https://huggingface.co/new-space (SDK: **Gradio**).
-2. Upload the three files in this folder: `app.py`, `requirements.txt`, `data.json`, and the image
-   `hero_ladder.png` (and this README). That's it — the Space builds and runs.
+- Code & reproducibility: https://github.com/shahanxd/magpie
+- Dataset (gated): https://huggingface.co/datasets/shahanxd/magpie-core-v1
+- Hardened model: https://huggingface.co/shahanxd/fire_rr
 
-To refresh the numbers after new runs: from the repo root, `python space/build_space_data.py`, then
-re-upload `data.json` and `hero_ladder.png`.
+*A static page (no runtime, runs no models) rendering committed, HarmBench-validated results.
+Rebuild it from the repo with `python space/build_space_data.py`; an interactive Gradio version
+of the same views is in the repo (`python space/app.py`).*

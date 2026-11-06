@@ -14,6 +14,8 @@ import gradio as gr
 HERE = Path(__file__).resolve().parent
 DATA = json.loads((HERE / "data.json").read_text(encoding="utf-8"))
 HERO = str(HERE / "hero_ladder.png")
+_ART = HERE / "article.md"
+ARTICLE = _ART.read_text(encoding="utf-8") if _ART.is_file() else ""
 
 MODEL_ORDER = ["fire", "global", "fire_rr"]
 MODEL_LABEL = {"fire": "Fire (vendor)", "global": "Global (vendor)", "fire_rr": "Fire + RR (hardened)"}
@@ -61,6 +63,10 @@ with gr.Blocks(title="Magpie — pricing robustness", css=CSS, theme=gr.themes.S
         "Tiny Aya (Cohere Labs), English + Hinglish + Devanagari. "
         "<span class='md-note'>Every number is HarmBench-content-validated.</span>"
     )
+
+    if ARTICLE:
+        with gr.Tab("📄 Article"):
+            gr.Markdown(ARTICLE)
 
     with gr.Tab("Cost ladder"):
         gr.Markdown("**How much does the next break cost?** Attack success rate (content-validated) "
