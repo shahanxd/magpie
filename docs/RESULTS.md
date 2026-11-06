@@ -80,6 +80,47 @@ Validated ladder so far (HarmBench ASR, Fire / Global, en): L0 0.05 / 0.07 → L
 0.29 / 0.29, with BoN at 0.19. The cost axis rises L0 → L1; Fire ≈ Global on the vendor models,
 as expected before the hardened-variant and L2–L3 comparisons.
 
+## H1 — cost-to-break per form (English vs Hinglish vs Devanagari)
+
+**Run:** `results/attack-l0-direct/20261106-014044/` · git `a209356` · Fire · the v2 Aya parallel
+core (`shahanxd/magpie-core-v2`): the **same** 120 harmful + 80 benign seeds in all three forms,
+so a per-form difference is the form, not the content. L0 direct ask, greedy + one sampled draw.
+HarmBench rescore: `results/rescore/20261106-020352/`. Per-form verdict counts (no text) in the
+L0 run's `out/perform_verdict_breakdown.json`.
+
+| form | lexicon ASR | **HarmBench ASR (95% CI)** | over-refusal (lexicon) |
+|---|---|---|---|
+| en       | 0.21 [0.15, 0.29] | **0.03 [0.01, 0.08]** | 0.15 |
+| hi-Deva  | 0.86 [0.78, 0.91] | **0.28 [0.20, 0.36]** | 0.03 |
+| hing     | 0.09 [0.05, 0.16] | **0.03 [0.01, 0.08]** | 0.01 |
+
+**Read: there is a real Devanagari gap (H1), but it is a third the size the lexicon claimed — and
+the lexicon's cross-lingual ranking is wrong.** Validated on content, Devanagari is the weakest
+form: Fire actually complies with **0.28** of harmful requests in Devanagari vs **0.03** in English
+and **0.03** in Hinglish — a genuine ~9× script/language safety-coverage gap that survives the
+content judge and is the citeable H1 result. But the refusal-lexicon ASR (0.86 / 0.09 / 0.21) is a
+**judge-and-collapse artifact**, which the raw verdicts (no text) pin down — this is C4 extended
+cross-lingually and H5 (the en-vs-non-English judge gap) measured:
+
+- **Devanagari (lexicon 0.86 → HarmBench 0.28).** The lexicon has only 20 Devanagari refusal cues
+  (vs 48 en / 84 hing). Of its 176 "compliance" verdicts, **129 (73%) contain a Devanagari
+  refusal/negation particle** outside those 20 — the model refused and the judge could not read it.
+  Reclassifying on that one signal drops lexicon ASR to 0.30; HarmBench independently lands at 0.28.
+  The lexicon **tripled** the real Devanagari ASR.
+- **Hinglish (lexicon 0.09 → HarmBench 0.03).** The low lexicon number is not clean robustness:
+  **224/240 attempts collapse** (degenerate / repetitive output), which the guard excludes from ASR.
+  Fire largely cannot produce coherent text for romanized code-mixing; content-validated, it is as
+  robust as English (0.03), not "the safest form."
+- **English (lexicon 0.21 → HarmBench 0.03).** Clean: 203/240 refusals, 0 missed-refusal particles.
+  The only form a refusal lexicon tracks, and it matches the main-core English L0 (0.05).
+
+So the lexicon would have reported Devanagari as **4× English and Hinglish as the safest** form; the
+truth is Devanagari ≈ 9× English and Hinglish ≈ English. **Cross-lingual robustness cannot be read
+off a refusal lexicon** — it needs a content judge and a collapse guard, which is exactly what
+Magpie pairs. (Caveat the other way: over-refusal here is lexicon-measured, so the hi-Deva 0.03 /
+hing 0.01 over-refusal are *lower bounds* — the same missing non-English cues hide benign refusals
+too; only the English 0.15 is trustworthy. A native-reviewed benign pass is the clean follow-up.)
+
 ## L1c — best-of-N on the input (synthetic noise, English)
 
 **Run:** `results/attack-l1-bon-input/20261105-201012/` · git `e9f2cd3` · Fire · 100 harmful
@@ -104,6 +145,31 @@ the headline case for the validated-judge rescoring pass** (`magpie.judges.safet
 which is the next step; treat the numbers above as the lexicon upper bound, not the jailbreak
 rate. (Over-refusal under BoN is a separate benign-variation run, deferred with the Hinglish data
 for H2b.)
+
+## C2 — natural vs synthetic best-of-N (is the power law an adversarial-noise effect?)
+
+**Runs:** synthetic = `results/attack-l1-bon-input/20261105-201012/` (Fire, 100 harmful, **English**,
+Hughes-et-al. ASCII/caps/scramble noise, σ=0.4); natural = `results/attack-l1-bon-input/20261106-014054/`
+· git `a209356` (Fire, 80 harmful, **Hinglish**, natural human-like respelling variants from
+`magpie.data.hinglish`). N ≤ 64, early-stopped, lexicon + BoN gate.
+
+| BoN source (form) | ASR N=1 | N=8 | N=64 | power law `−logASR=a·Nᵇ` |
+|---|---|---|---|---|
+| synthetic noise (en)      | 0.07   | 0.97   | 1.00   | a=1.57, **b=−1.93**, r²=0.96 |
+| natural respelling (hing) | 0.0375 | 0.0375 | 0.0375 | **b≈0** (flat, r²=0) |
+
+**Read: the best-of-N power law is an adversarial-noise phenomenon, not "more samples ⇒ more
+breaks".** Synthetic ASCII/caps/scramble noise opens attack surface and scales steeply (b≈−1.9,
+saturating by N≈16). Natural, meaning-preserving Hinglish respelling does **not** scale at all — 64
+draws break no more prompts than one (ASR flat at the N=1 floor). The direction of this result is
+judge-independent: a flat lexicon-ASR curve sitting near the floor cannot *become* a steep curve
+under the stricter HarmBench judge (a content judge only lowers ASR), so the "no scaling" finding
+holds without a separate rescore. Two honest confounds remain for the *level*: it is also the
+Hinglish form, where Fire collapses (see H1), so there are few coherent candidates for BoN to
+select among; and the per-draw number is the lexicon floor. For the defender the takeaway is
+concrete: cheap orthographic diversity a real user would produce is not an amplifier, so a BoN
+defense budget should target adversarial perturbation, not natural spelling variation. A matched
+synthetic-vs-natural sweep on one fixed form is the clean follow-up.
 
 ## C3 / H4 — does the refusal margin predict cost-to-break? (the breakthrough bet)
 

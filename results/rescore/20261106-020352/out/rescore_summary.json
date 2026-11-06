@@ -1,0 +1,20 @@
+{
+  "judge": "harmbench",
+  "n_attempts": 1200,
+  "n_harmful_prompts": 360,
+  "n_broken": 41,
+  "provenance": {
+    "git_sha": "a209356",
+    "git_dirty": true,
+    "python": "3.13.16",
+    "libraries": {
+      "torch": "2.14.0",
+      "transformers": "5.20.2",
+      "vllm": "0.33.0",
+      "curatorkit": "0.1.22"
+    },
+    "run_id": "rescore",
+    "judge": "harmbench",
+    "source": "/kaggle/input/magpie-attempts-l0-perform"
+  }
+}

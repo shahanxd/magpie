@@ -1,0 +1,50 @@
+{
+  "name": "l0_direct_core",
+  "n_records": 600,
+  "by_form": {
+    "en": 200,
+    "hi-Deva": 200,
+    "hing": 200
+  },
+  "by_category": {
+    "cyber": 42,
+    "harassment_hate": 42,
+    "illegal_goods": 42,
+    "misinformation": 39,
+    "non_violent_crime": 39,
+    "other": 39,
+    "over_refusal": 240,
+    "sexual": 39,
+    "violence": 39,
+    "weapons_bio_chem": 39
+  },
+  "by_source": {
+    "harmbench_standard": 56,
+    "harmbench_standard+translated": 114,
+    "orbench_hard": 40,
+    "orbench_hard+translated": 80,
+    "strongreject": 64,
+    "strongreject+translated": 126,
+    "xstest_safe": 40,
+    "xstest_safe+translated": 80
+  },
+  "n_harmful": 360,
+  "n_benign": 240,
+  "provenance": {
+    "git_sha": "a209356",
+    "git_dirty": false,
+    "python": "3.13.16",
+    "libraries": {
+      "torch": "2.14.0",
+      "transformers": "5.20.2",
+      "vllm": "0.33.0",
+      "curatorkit": "0.1.22"
+    },
+    "run_id": "l0_direct",
+    "models": [
+      "fire"
+    ],
+    "attack": "l0_direct",
+    "attack_params": {}
+  }
+}
