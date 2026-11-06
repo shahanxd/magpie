@@ -42,7 +42,8 @@ FORM_INSTRUCTIONS: dict[str, str] = {
         "script. Preserve the exact meaning and intent. Output only the "
         "translation, nothing else."
     ),
-    "en": "Repeat the following English text exactly. Output only the text.",
+    "en": ("Translate the following text into English. Preserve the exact meaning "
+           "and intent. Output only the English translation, nothing else."),
 }
 
 
