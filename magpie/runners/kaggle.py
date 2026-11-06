@@ -474,7 +474,37 @@ class KaggleRunner:
         else:
             self.api.dataset_create_new(str(local), public=False, convert_to_csv=False,
                                         dir_mode="skip")
+        # A freshly created/versioned dataset is not instantly mountable: Kaggle
+        # indexes it asynchronously, so a kernel pushed in the same second mounts
+        # nothing (kaggle_input: []). Wait until every uploaded data file is listed
+        # before returning, so the caller can attach it safely.
+        want = {p.name for p in local.glob("*.jsonl")}
+        self._wait_dataset_ready(ref, want)
         return ref
+
+    def _wait_dataset_ready(self, ref: str, want: set[str], timeout_s: int = 300,
+                            log: Callable[[str], None] = print) -> None:
+        """Poll until ``ref``'s latest version lists every file in ``want``."""
+        if not want:
+            return
+        deadline = time.monotonic() + timeout_s
+        delay = 3.0
+        while True:
+            seen: set[str] = set()
+            try:
+                listing = self.api.dataset_list_files(ref)
+                seen = {getattr(f, "name", getattr(f, "ref", str(f)))
+                        for f in getattr(listing, "files", []) or []}
+            except Exception:  # noqa: BLE001 - transient while indexing
+                seen = set()
+            if want <= seen:
+                return
+            if time.monotonic() >= deadline:
+                log(f"warning: dataset {ref} not fully indexed after {timeout_s}s "
+                    f"(missing {sorted(want - seen)}); proceeding anyway")
+                return
+            time.sleep(delay)
+            delay = min(delay * 1.5, 20.0)
 
     def pull(self, ref: str, dest: Path, file_pattern: str | None = None) -> list[str]:
         """Download the output files of the latest version of ``ref`` into ``dest``.
