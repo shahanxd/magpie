@@ -139,3 +139,19 @@ def test_attack_job_runs_any_registered_attack():
     assert set(j.metadata("u")["model_sources"]) == {
         "cohere-labs/tiny-aya/transformers/fire/1",
         "cohere-labs/tiny-aya/transformers/global/1"}
+
+
+def test_attack_job_attacks_a_hardened_checkpoint_from_a_kernel():
+    j = JOBS["attack"](attack="l1_templates", hardened_from="u/magpie-harden-rr")
+    # Vendor Fire vs the hardened model, paired in one kernel.
+    assert j.config["models"] == ["fire", "fire_rr"]
+    # The hardened model is loaded by path from the mounted kernel output; only
+    # registry models contribute a Kaggle model source (fire_rr is not one).
+    assert j.config["model_dirs"] == {"fire_rr": "/kaggle/input/magpie-harden-rr/ckpt/fire_rr"}
+    meta = j.metadata("u")
+    assert meta["kernel_sources"] == ["u/magpie-harden-rr"]
+    assert meta["model_sources"] == ["cohere-labs/tiny-aya/transformers/fire/1"]
+    # An explicit models list is respected (attack only the hardened model).
+    solo = JOBS["attack"](hardened_from="u/magpie-harden-rr", models=["fire_rr"])
+    assert solo.config["models"] == ["fire_rr"]
+    assert solo.metadata("u")["model_sources"] == []

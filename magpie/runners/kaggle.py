@@ -124,6 +124,7 @@ class KernelJob:
     models: list[str] = field(default_factory=lambda: ["fire"])  # keys of config.MODELS
     dataset_sources: list[str] = field(default_factory=list)
     extra_model_sources: list[str] = field(default_factory=list)  # raw Kaggle model refs
+    kernel_sources: list[str] = field(default_factory=list)  # other kernels' outputs to mount
     machine_shape: str = T4
     gpu: bool = True  # False = CPU-only kernel (costs no GPU quota)
     # Regex a pulled output file must match (Kaggle SDK uses re.search). Used to
@@ -150,7 +151,7 @@ class KernelJob:
             "machine_shape": self.machine_shape if self.gpu else "",
             "dataset_sources": list(self.dataset_sources),
             "competition_sources": [],
-            "kernel_sources": [],
+            "kernel_sources": list(self.kernel_sources),
             "model_sources": ([MODELS[m]["kaggle_source"] for m in self.models]
                               + list(self.extra_model_sources)),
         }
@@ -199,18 +200,40 @@ def attack_job(**overrides: Any) -> KernelJob:
     """
     attack = overrides.pop("attack", "l1_templates")
     core_dataset = overrides.pop("core_dataset", None)
+    # Attack a hardened checkpoint saved in another kernel's output: mount that
+    # kernel and point the worker's model_dirs at the merged model inside it.
+    # e.g. hardened_from="shahanxd/magpie-harden-rr" -> model fire_rr loaded from
+    # /kaggle/input/magpie-harden-rr/ckpt/fire_rr (the harden job's save path).
+    hardened_from = overrides.pop("hardened_from", None)
+    hardened_name = overrides.pop("hardened_name", "fire_rr")
+    hardened_subpath = overrides.pop("hardened_subpath", None)
+    kernel_sources = list(overrides.pop("kernel_sources", []))
+    user_set_models = "models" in overrides
     cfg = {"attack": attack, "models": ["fire", "global"], "n_harmful": 150, "n_benign": 150,
            "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0",
            "worker": "magpie.runners.jobs.l0", "timeout_s": 3 * 3600}
     cfg.update(overrides)
     if core_dataset:
         cfg["use_core"] = True
+    if hardened_from:
+        slug = hardened_from.split("/")[-1]
+        subpath = hardened_subpath or f"ckpt/{hardened_name}"
+        mount = f"/kaggle/input/{slug}/{subpath}"
+        model_dirs = dict(cfg.get("model_dirs") or {})
+        model_dirs[hardened_name] = mount
+        cfg["model_dirs"] = model_dirs
+        # Default to the paired comparison vendor-fire vs hardened, in one kernel
+        # (same prompts, same seeds), unless the caller named models explicitly.
+        if not user_set_models:
+            cfg["models"] = ["fire", hardened_name]
+        if hardened_from not in kernel_sources:
+            kernel_sources.append(hardened_from)
     models = cfg.get("models", ["fire", "global"])
-    model_keys = [m for m in models if m in MODELS]
+    model_keys = [m for m in models if m in MODELS]  # only registry keys get a Kaggle source
     return KernelJob(name=f"attack-{attack.replace('_', '-')}",
                      entrypoint="magpie.runners.jobs.launch:main", config=cfg,
                      models=model_keys, dataset_sources=[core_dataset] if core_dataset else [],
-                     timeout_s=cfg["timeout_s"])
+                     kernel_sources=kernel_sources, timeout_s=cfg["timeout_s"])
 
 
 # Aya Expanse 8B on the Kaggle Models mirror (needs a one-time licence accept);
@@ -303,6 +326,7 @@ def probe_job(**overrides: Any) -> KernelJob:
     return KernelJob(name="probe", entrypoint="magpie.runners.jobs.probe:main", config=cfg,
                      models=list(cfg.get("models", [])),
                      extra_model_sources=list(cfg.get("extra_sources", [])),
+                     kernel_sources=list(cfg.get("kernel_sources", [])),
                      gpu=False, enable_internet=True, timeout_s=1800)
 
 
