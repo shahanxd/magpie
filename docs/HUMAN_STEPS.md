@@ -1,86 +1,60 @@
-# What needs a human — simple steps
+# What's left for a human — simple steps
 
-Everything else is automated and committed. These five need you (links included). Order: **1 and 4
-first** (they unblock the rest), then 2, 3, 5 any time before the Nov 14 deadline.
+## Already done (no action needed)
 
----
-
-## 1. Publish to Hugging Face (the submission lives here)
-
-You need a free HF account: https://huggingface.co/join
-
-**a) The article.** Copy the text from `docs/ARTICLE.md` (in this repo) into a new HF article:
-→ https://huggingface.co/new-blog  (title it "Magpie", paste the markdown, add the hero image
-`docs/figures/hero_ladder.png`). Tag your teammates. *If the Lexsi hackathon page says to submit the
-article somewhere specific, follow that instead — this is the generic HF route.*
-
-**b) The dataset collection.** The core is already on HF (private): `shahanxd/magpie-core-v2`.
-- Keep it **gated** (harmful completions must stay gated). It already is.
-- Group it into a collection: → https://huggingface.co/collections → "New collection" → add the
-  dataset.
-
-**c) The hardened model (optional, allowed).** The RR-hardened `fire_rr` is a *defense* variant, so
-it's fine to publish (only *attacked/abliterated* weights must stay private — we never publish
-those).
-- Get the files: open the Kaggle kernel https://www.kaggle.com/code/shahanxd/magpie-harden-rr →
-  "Output" → download the `ckpt/fire_rr/` folder.
-- New model repo: → https://huggingface.co/new (type: Model) → upload that folder.
-
-**d) The Space (demo).** I'm building the files under `space/` in this repo.
-- New Space: → https://huggingface.co/new-space → SDK **Gradio** → upload everything in `space/`
-  (or point it at the GitHub repo's `space/` folder). It runs with no GPU.
-
-**e) The GitHub repo.** Make https://github.com/shahanxd/magpie public (Settings → General →
-"Change visibility" → Public) so judges can see the code.
+- **The page judges open** — article + all results, live and free:
+  https://huggingface.co/spaces/shahanxd/magpie  (the 📄 Article tab *is* the article)
+- **Hardened model** with weights and a proper model card (CC-BY-NC-4.0):
+  https://huggingface.co/shahanxd/fire_rr
+- **Dataset card** corrected: https://huggingface.co/datasets/shahanxd/magpie-core-v1
+  (this repo holds the final v2 Aya core; the "v1" name is just historical)
+- Organizer answers: publishing is fine, and tagging teammates is fine (judges see a PII-masked copy).
 
 ---
 
-## 2. Submit the upstream contributions (C5)
+## Your steps, in order
 
-I'm preparing ready-to-apply patches under `contrib/` (a refusal matcher + script-aware BoN for
-SafeTune, and an Indic red-team pack for AuditKIT). For each one:
-1. Find the repo's GitHub URL (from its PyPI page — e.g. https://pypi.org/project/safetune/ ,
-   https://pypi.org/project/auditkit/ — "Homepage"/"Source").
-2. Fork it on GitHub (top-right "Fork").
-3. In your fork: apply the patch (`git apply contrib/<name>.patch`), commit, push.
-4. Open a Pull Request from your fork to the original repo. `contrib/README.md` has the exact
-   commands and a suggested PR description.
+### 1. Put the code on `main` (important — judges see `main`)
+Right now `main` on GitHub is empty; all the work is on the branch `claude/sweet-dijkstra-7e7z0p`.
+- Easiest: tell Claude **"open the PR"**, then click **Merge** on GitHub.
+- Or yourself: open https://github.com/shahanxd/magpie/compare/main...claude/sweet-dijkstra-7e7z0p
+  → **Create pull request** → **Merge pull request**.
 
-*(These repos aren't in my GitHub access, so I can prepare the patches but can't open the PRs.)*
+### 2. Let judges see the dataset (2 clicks)
+It is private, so judges get a 404. Open https://huggingface.co/datasets/shahanxd/magpie-core-v1/settings
+- **Change repository visibility** → **Public**
+- On the same page, **Access requests / Gated access** → **Enable**, approval **Automatic**.
+  (The terms form — affiliation + intended use — is already in the card.)
 
----
+### 3. Finish the collection (1 minute)
+Open https://huggingface.co/collections/shahanxd/lexsi-6aedf40eefc742173da5acbc → **Add to collection**,
+add the Space **`shahanxd/magpie`** and the model **`shahanxd/fire_rr`** (keep the dataset).
+*(Your HF token can't edit collections, so this one is yours.)*
 
-## 3. Native-speaker check (10–20 min, one Hindi speaker)
+### 4. Article link for the submission form
+HF articles now need PRO. Submit the Space as the article: **https://huggingface.co/spaces/shahanxd/magpie**.
+Optional Discord check: "Articles need HF PRO — is a Space page OK as our article?"
 
-1. Download the review sheet from the gated dataset: it's `review_hing.csv` / the review sheet in
-   `shahanxd/magpie-core-v2` on HF.
-2. A Hindi/Hinglish speaker fills the `ok (y/n)` column (and `fixed_translation` where needed) —
-   just checking the translations read naturally. Short session; skip anything uncomfortable.
-3. Send me the filled CSV (or commit it) and I'll fold the corrections in and report the agreement
-   rate.
+### 5. Native-speaker check (when you have a Hindi speaker)
+Download: https://huggingface.co/datasets/shahanxd/magpie-core-v1/blob/main/native_review_15pct.csv
+(click **Download**). Fill the `ok (y/n)` column, and `fixed_translation` where something reads
+wrong. Send the CSV back to Claude to fold in and report the agreement rate.
 
----
+### 6. Upstream PRs (C5) — in the browser, no git needed (~3 min each)
 
-## 4. Ask the organizers (Discord ticket)
+**SafeTune**
+1. Open https://github.com/Lexsi-Labs/SafeTune → **Fork** → **Create fork**.
+2. In your fork: **Add file → Create new file**. Name it `src/safetune/multilingual_refusal.py`.
+3. Paste the contents of
+   https://github.com/shahanxd/magpie/blob/claude/sweet-dijkstra-7e7z0p/contrib/safetune_multilingual_refusal.py
+   (click **Raw**, select all, copy).
+4. **Commit changes…** → choose **Create a new branch** → **Propose changes**.
+5. On the next page: **Create pull request**. Title and description: copy section **1** of
+   https://github.com/shahanxd/magpie/blob/claude/sweet-dijkstra-7e7z0p/contrib/README.md
 
-In the Lexsi hackathon Discord, open a ticket and ask two things:
-1. "Can we publish the **hardened** model weights? (We are **not** publishing attacked/abliterated
-   weights.)" — our plan assumes hardened = yes, abliterated = no.
-2. "Double-blind vs tagging teammates on the HF article — which do you want?"
+**AuditKIT** — same steps with:
+- repo https://github.com/Lexsi-Labs/AuditKIT
+- new file `src/auditkit/redteam/probes/indic.py`
+- contents of `contrib/auditkit_indic_redteam.py`, PR text from section **3** of `contrib/README.md`.
 
-*(I don't have the Discord invite link — use the one from your hackathon registration email /
-the Lexsi hackathon page.)*
-
----
-
-## 5. Laptop demo (optional, nice-to-have)
-
-On your machine with the RTX 3050: run Tiny Aya Fire as a GGUF with llama.cpp
-(https://github.com/ggml-org/llama.cpp) and show one L0 refusal + one prefill break, to demonstrate
-the on-device threat live. I can write the exact commands if you want — this environment just can't
-reach your laptop.
-
----
-
-**TL;DR for today:** make the GitHub repo public (1e), paste `docs/ARTICLE.md` into an HF article
-(1a), and drop the two questions in the organizer Discord (4). The rest can follow.
+### 7. Laptop demo — skipped for now.
