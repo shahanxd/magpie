@@ -30,3 +30,7 @@ __all__ = [
 from magpie.analysis.cox import cox_margin  # noqa: E402
 
 __all__ += ["cox_margin"]
+
+from magpie.analysis.figures import build_hero, plot_cost_ladder  # noqa: E402
+
+__all__ += ["build_hero", "plot_cost_ladder"]
