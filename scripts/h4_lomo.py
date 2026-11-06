@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCES = {
     "fire": ("results/mech-fire/20261106-004626/out/margins_fire.json",
              "results/attack-l1-templates/20261105-194721/out/outcomes_fire.jsonl"),
-    "global": ("results/mech-global/MECH_GLOBAL_TS/out/margins_global.json",
+    "global": ("results/mech-global/20261106-153151/out/margins_global.json",
                "results/attack-l1-templates/20261105-194721/out/outcomes_global.jsonl"),
 }
 

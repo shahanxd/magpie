@@ -187,9 +187,25 @@ duration = attacker effort to break (best-of-N draws / templates tried), event =
 the hazard of a prompt being broken by ~28% under best-of-N and ~40% under templates, both
 significant. A prompt's cheap, attack-free white-box margin **predicts how expensive it is to
 break** — the C3 bet the pre-registration flagged as the high-risk contribution (a null would have
-been reportable; it is not null). This is on Fire, English; the pre-registered leave-one-model-out
-and en-vs-Hinglish checks follow with the hardened variants and the Hinglish core. Margins carry
-no prompt text and are committed; the direction is fit on disjoint data, never the eval prompts.
+been reportable; it is not null). Margins carry no prompt text and are committed; the direction is
+fit on disjoint data, never the eval prompts.
+
+**Leave-one-model-out (pre-registered): the predictor generalizes.** Repeating the margin
+extraction on **Global** (`results/mech-global/20261106-153151/`, direction fit on its own disjoint
+contrast set) and the Cox join on L1 templates for each model (`scripts/h4_lomo.py`):
+
+| model | n | events | hazard ratio (95% CI) | p |
+|---|---|---|---|---|
+| Fire   | 100 | 51 | 0.60 [0.49, 0.74] | 2×10⁻⁶ |
+| Global | 150 | 81 | **0.67 [0.57, 0.79]** | 2×10⁻⁶ |
+| **pooled** | 250 | 132 | **0.64 [0.56, 0.73]** | **2×10⁻¹¹** |
+
+The margin predicts cost-to-break on Global too — a model its direction was *not* tuned on — with
+the same sign and significance (pooled concordance 0.69). So H4 is not a Fire-specific artifact: a
+cheap, attack-free white-box margin generalizes across models. The en-vs-Hinglish margin check
+stays open (the model collapses on Hinglish, so there are too few break events there for a
+well-powered Cox — itself a finding). Margins are lexicon-break-depth joins, consistent across
+models.
 
 ## L2a — prefilling / safety depth (English)
 

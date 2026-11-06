@@ -209,8 +209,14 @@ Cox model:
 hazard of a break by ~28% (best-of-N) to ~40% (templates), both significant. A prompt's margin —
 computed with **no attack**, from a direction fit on disjoint data — predicts how expensive it will
 be to break. This was the pre-registration's flagged high-risk contribution (a null would have been
-reportable); it is not null. The leave-one-model-out and en-vs-Hinglish margin checks are the
-planned extensions.
+reportable); it is not null.
+
+**It also generalizes across models (the pre-registered leave-one-model-out check).** Extracting
+the margin on **Global** (its own disjoint contrast set) and re-fitting on L1 templates: Fire HR
+0.60, Global HR 0.67, pooled **0.64 [0.56, 0.73], p = 2×10⁻¹¹** (concordance 0.69). The predictor
+works on a model it was not tuned on — so the audit is not a per-model artifact. (The en-vs-Hinglish
+margin check stays open: the model *collapses* on Hinglish, leaving too few break events for a
+well-powered regression — itself a finding.)
 
 ---
 
