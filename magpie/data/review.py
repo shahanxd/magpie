@@ -49,9 +49,10 @@ def select_for_review(records: Sequence[PromptRecord], frac: float = 0.15, seed:
     return picked
 
 
-def write_review_csv(records: Sequence[PromptRecord], path: Path, frac: float = 0.15,
+def write_review_csv(records: Sequence[PromptRecord], path: Path | str, frac: float = 0.15,
                      seed: int = 0) -> int:
     """Write a native-review CSV (translation vs English source); return row count."""
+    path = Path(path)
     en = _en_by_parallel(records)
     chosen = select_for_review(records, frac=frac, seed=seed)
     path.parent.mkdir(parents=True, exist_ok=True)

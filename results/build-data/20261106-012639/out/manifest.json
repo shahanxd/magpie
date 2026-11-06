@@ -1,0 +1,64 @@
+{
+  "name": "magpie-core-v1",
+  "n_records": 1200,
+  "by_form": {
+    "en": 400,
+    "hi-Deva": 400,
+    "hing": 400
+  },
+  "by_category": {
+    "cyber": 69,
+    "harassment_hate": 69,
+    "illegal_goods": 69,
+    "misinformation": 66,
+    "non_violent_crime": 66,
+    "other": 63,
+    "over_refusal": 600,
+    "sexual": 66,
+    "violence": 66,
+    "weapons_bio_chem": 66
+  },
+  "by_source": {
+    "harmbench_standard": 90,
+    "harmbench_standard+translated": 180,
+    "orbench_hard": 100,
+    "orbench_hard+translated": 200,
+    "strongreject": 110,
+    "strongreject+translated": 220,
+    "xstest_safe": 100,
+    "xstest_safe+translated": 200
+  },
+  "n_harmful": 600,
+  "n_benign": 600,
+  "provenance": {
+    "git_sha": "ae8ae2e",
+    "git_dirty": false,
+    "python": "3.13.16",
+    "libraries": {
+      "torch": "2.14.0",
+      "transformers": "5.20.2",
+      "vllm": "0.33.0",
+      "curatorkit": "0.1.22"
+    },
+    "run_id": "build_data",
+    "forms": [
+      "hing",
+      "hi-Deva"
+    ],
+    "translate_model": "aya",
+    "lexsi_provenance": {
+      "schema": "lexsi.provenance/1",
+      "library": "curatorkit",
+      "version": "0.1.22",
+      "git_sha": null,
+      "created_at": "2026-11-06T01:37:14Z",
+      "base_model": "CohereLabs/tiny-aya-fire",
+      "method": "magpie.curate",
+      "inputs": [],
+      "params": {
+        "minhash_threshold": 0.92,
+        "per_form": true
+      }
+    }
+  }
+}

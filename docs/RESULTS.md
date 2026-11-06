@@ -183,6 +183,22 @@ and across-level comparisons are valid. Validated HarmBench ASR is a separate re
 (`magpie.judges.safetune_judge`); the inline two-model-in-one-process pass proved fragile on the
 T4, so rescoring runs as its own HarmBench-only kernel.
 
+## Data v2 — the Aya parallel core (Hinglish + Devanagari)
+
+**Run:** `results/build-data/20261106-012639/` · git `ae8ae2e` · translator: **Aya Expanse 8B**
+(tensor-parallel over both T4s) · pushed private to `huggingface.co/datasets/shahanxd/magpie-core-v1`
+with a 132-row native-review sheet (`native_review_15pct.csv`, ~15% stratified by form x category).
+
+- **1200 records**: 400 en + 400 Hinglish + 400 Devanagari (full yield). Two pipeline bugs fixed
+  to get here: the back-translation Jaccard gate was far too strict for a paraphrasing translator
+  (passed 21/800), and its English instruction said "repeat" instead of "translate". v2 keeps all
+  translations and uses **native verification as the quality gate** (the plan's design), not the
+  round-trip proxy.
+- **Caveat (honest):** the heuristic CMI tagger reads low (hing median 0) because its small
+  romanized-Hindi lexicon mislabels out-of-lexicon Hindi tokens as English, so it under-counts
+  code-mixing; it is a noisy covariate, and the natural-variation augmenter adds code-mixing at
+  attack time. The native-review sheet is where translation quality is actually judged.
+
 ## Data v1 — the parallel core
 
 **Run:** `results/build-data/20261104-181016/` · git `3149dd3` · translator:

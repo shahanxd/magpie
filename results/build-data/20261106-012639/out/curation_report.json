@@ -1,0 +1,64 @@
+{
+  "n_in": 1200,
+  "n_out": 1200,
+  "n_removed": 0,
+  "minhash_threshold": 0.92,
+  "translation_report_sample": {
+    "harmbench:government_email_hack_instructions": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 0.0
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": true
+      }
+    },
+    "strongreject:b54e2ea898": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 0.0
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": true
+      }
+    },
+    "strongreject:df07425608": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 0.0
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": true
+      }
+    },
+    "strongreject:82bf971c34": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 0.0
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": true
+      }
+    },
+    "strongreject:62fadd283a": {
+      "hing": {
+        "form": "hing",
+        "ok": true,
+        "cmi": 2.0
+      },
+      "hi-Deva": {
+        "form": "hi-Deva",
+        "ok": true
+      }
+    }
+  },
+  "n_translated": 800
+}
