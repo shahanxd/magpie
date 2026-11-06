@@ -2,7 +2,7 @@
 
 Read this together with `docs/PLAN.md` (plan v2) before doing any work. It records what has been decided, what has been checked, and what happens next.
 
-**Status (Nov 4, 2026):** plan v2 **approved**; build phase **through the D1 gate**. The full framework (cost model, vLLM/HF/echo serving, L0–L1 attacks, multilingual judge + collapse guard + model judges, Hinglish tools, survival analysis, Kaggle runner, data loaders, HF publishing) is committed with CPU CI green. The day-1 smoke test passed on a Kaggle T4; `docs/PREREGISTRATION.md` is committed. **First L0 table** (Fire vs Global, en) and **data-v1 parallel core** (private HF dataset) are done — see §3 for verified numbers, `docs/RESULTS.md` for the tables and findings, and §6 for what's next.
+**Status (Nov 6, 2026):** plan v2 **approved**; results phase well advanced. The full English attacker ladder (L0→L3), the per-form H1 study, C2 best-of-N, the C3/H4 Cox audit, the C4 judge-validity headline, and the M2/M3 hardening re-attack have all landed on Kaggle T4s and are committed, lexicon + HarmBench-validated. The v2 Aya parallel core (1200 records) is on private HF with a native-review sheet, the hero figure is generated, and a **draft HF submission article** (`docs/ARTICLE.md`) is written. CPU CI is green. See §3 for verified env numbers, `docs/RESULTS.md` for every table with provenance, `docs/ARTICLE.md` for the write-up, and §6 for what remains.
 
 ---
 
@@ -104,15 +104,21 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - Data (`magpie.data`): seed loaders, harm taxonomy, stratification, parallel-core assembly.
 - `docs/PREREGISTRATION.md` committed before the runs.
 
-**Done (runs landed, committed):**
-- **First L0 table** on Fire/Global (en): `results/l0/20261104-173906/` — ASR 0.21 (Fire) / 0.24 (Global), over-refusal 0.13, collapse ~1% (lexicon judge). See `docs/RESULTS.md`.
-- **Data v1 parallel core**: `results/build-data/20261104-181016/` — 632 records (400 en + 188 hing + 44 hi-Deva), pushed **private** to `huggingface.co/datasets/shahanxd/magpie-core-v1`.
+**Done (runs landed, committed — see `docs/RESULTS.md` for tables, `docs/ARTICLE.md` for the write-up):**
+- **English cost ladder on Fire/Global**, lexicon + HarmBench-validated: L0 direct (HarmBench 0.05), L1 templates (0.29), L1 best-of-N synthetic (0.19), L2 prefill (0.31, shallow — 1 token → 0.80), L3a abliteration (0.68, weight access).
+- **C4 judge validity (headline):** lexicon over-counts 4–5× and flips rankings — within English (BoN vs templates) and cross-lingually (lexicon says Devanagari 4× English & Hinglish safest; HarmBench says Devanagari ≈9× English, Hinglish ≈ English).
+- **H1 per-form L0** on the v2 Aya core, HarmBench: en 0.03 / hing 0.03 / hi-Deva 0.28 (real but modest script gap; `perform_verdict_breakdown.json` dissects the lexicon artifact).
+- **C2 best-of-N:** synthetic noise (en) scales steeply (b=−1.93); natural Hinglish respelling is flat (b≈0) — the power law is an adversarial-noise effect.
+- **C3 / H4 (the bet, positive):** refusal margin predicts cost-to-break, Cox hazard ratio 0.72 (BoN, p=0.003) / 0.60 (templates, p=2×10⁻⁶).
+- **Hardening:** M2 RR (`fire_rr`) trained and re-attacked paired vs vendor Fire — **raises attacker cost at no level** (HarmBench templates 0.30 vs 0.30, prefill 0.31 vs 0.31; identical safety-depth curve). M3 RepNoise collapsed the model (guard-flagged). Both are honest negatives.
+- **Data v2 Aya parallel core:** 1200 records (400 en/hing/hi-Deva), private HF `shahanxd/magpie-core-v2`, with a native-review sheet.
+- **Hero figure** (`docs/figures/hero_ladder.png`) and the **draft HF article** (`docs/ARTICLE.md`).
 
 **Remaining (next):**
-1. **Model-judge rescoring** of L0 with Llama-Guard-3-8B / WildGuard / the StrongREJECT scorer, to replace the lexicon pre-filter in the headline ASR (the code is in `magpie.judges.model_judge`).
-2. **Better translations** for the core: accept the **Aya Expanse 8B** licence on Kaggle so it mounts (it is gated; v1 used tiny-aya Fire, which gave low-CMI Hinglish and a low back-translation pass rate), re-run `build_data` with `translate_model=aya`, replace the token-overlap agreement proxy with embedding similarity, then the native-verification sprint. Then run L0 per form (en vs hing vs hi-Deva).
-3. Hardening (M2 RR / M3 RepNoise / M5 CAST) on Kaggle via SafeTune; L1a/b; prefill depth; refusal margins.
-4. BoN power laws (synthetic vs natural vs Devanagari), abliteration, injection suite, then the Cox prediction study (H4).
+1. **Robustness cards** — one-page deployer-facing summary per model (Fire, Global, fire_rr) with the cost ladder and over-refusal.
+2. **HF Space** + reproducibility README pass + a `make reproduce-core` entry point; push the hardened `fire_rr` to an HF model collection (attacked/abliterated weights stay unpublished).
+3. **H4 extensions** (pre-registered): leave-one-model-out and the en-vs-Hinglish margin check (needs Hinglish-core margins).
+4. **C5 upstream PRs:** script-/Hinglish-aware BoN + multilingual refusal matcher (SafeTune), Indic red-team pack (AuditKIT).
 
 **Known environment facts for GPU jobs:** the vLLM venv on Kaggle must also carry `accelerate`, `datasets`, `curatorkit`, `sentencepiece`, `tiktoken` (now installed by `install_vllm_venv`); release vLLM between models with `VLLMBackend.close()`; attach a Kaggle model source with its version (`.../8b/5`); Aya Expanse (`cohereforai/aya-expanse`) is gated on Kaggle and needs manual licence acceptance before it will mount.
 
