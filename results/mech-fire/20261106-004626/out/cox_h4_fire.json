@@ -1,0 +1,39 @@
+{
+  "model": "fire",
+  "predictor": "refusal_margin_z",
+  "layer": 24,
+  "by_attack": {
+    "l1_bon_input": {
+      "backend": "lifelines",
+      "n": 100,
+      "n_events": 100,
+      "hazard_ratio": 0.7176302796944604,
+      "coef": -0.33180077334396,
+      "p_value": 0.0032098141277211653,
+      "hr_ci": [
+        0.575520963610221,
+        0.8948296428748949
+      ],
+      "concordance": 0.6210443037974683,
+      "covariates": [
+        "margin"
+      ]
+    },
+    "l1_templates": {
+      "backend": "lifelines",
+      "n": 100,
+      "n_events": 51,
+      "hazard_ratio": 0.603067175326891,
+      "coef": -0.5057266865908714,
+      "p_value": 2.193178728912399e-06,
+      "hr_ci": [
+        0.48915617466409983,
+        0.7435049106893081
+      ],
+      "concordance": 0.7182873149259704,
+      "covariates": [
+        "margin"
+      ]
+    }
+  }
+}

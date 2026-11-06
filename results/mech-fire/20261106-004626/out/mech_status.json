@@ -1,0 +1,68 @@
+{
+  "env": {
+    "python": "3.13.16",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "cpu_count": 4,
+    "nvidia_smi": "Tesla T4, 15360 MiB, 580.178.04, 7.5\nTesla T4, 15360 MiB, 580.178.04, 7.5",
+    "cuda_version_smi": "13.0",
+    "ram_gb": 32.9,
+    "disk_free_gb": 20.9,
+    "disk_total_gb": 21.0,
+    "torch_version": "2.11.0+cu130",
+    "transformers_version": "5.20.2",
+    "vllm_version": "unavailable (ModuleNotFoundError)",
+    "accelerate_version": "1.15.0",
+    "tokenizers_version": "0.23.3",
+    "torch_cuda": "13.0",
+    "cuda_available": true,
+    "gpus": [
+      "Tesla T4",
+      "Tesla T4"
+    ],
+    "compute_capability": "7.5",
+    "bf16_supported": true,
+    "kaggle_input": [
+      "models/cohere-labs/tiny-aya/transformers"
+    ]
+  },
+  "safetune_install": {
+    "cmd": [
+      "/usr/bin/python3",
+      "-m",
+      "pip",
+      "..."
+    ],
+    "returncode": 0,
+    "seconds": 21.3,
+    "tail": ""
+  },
+  "torchao_removed": {
+    "cmd": [
+      "/usr/bin/python3",
+      "-m",
+      "pip",
+      "..."
+    ],
+    "returncode": 0,
+    "seconds": 0.7,
+    "tail": "Found existing installation: torchao 0.10.0\nUninstalling torchao-0.10.0:\n  Successfully uninstalled torchao-0.10.0\n"
+  },
+  "system_versions": {
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "transformers": "5.20.2",
+    "gpu_ok": true,
+    "n_gpu": 2
+  },
+  "worker": {
+    "cmd": [
+      "/usr/bin/python3",
+      "-m",
+      "magpie.runners.jobs.mech_worker",
+      "..."
+    ],
+    "returncode": 0,
+    "seconds": 125.7,
+    "tail": "7 [00:03<00:00, 85003.79 examples/s]\n\nGenerating 330k_test split:   0%|          | 0/33396 [00:00<?, ? examples/s]\nGenerating 330k_test split:  32%|\u2588\u2588\u2588\u258f      | 10673/33396 [00:00<00:00, 94120.16 examples/s]\nGenerating 330k_test split:  64%|\u2588\u2588\u2588\u2588\u2588\u2588\u258d   | 21331/33396 [00:00<00:00, 100658.68 examples/s]\nGenerating 330k_test split:  96%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258c| 32005/33396 [00:00<00:00, 103010.95 examples/s]\nGenerating 330k_test split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 33396/33396 [00:00<00:00, 101189.50 examples/s]\n\nGenerating 30k_train split:   0%|          | 0/27186 [00:00<?, ? examples/s]\nGenerating 30k_train split:  78%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258a  | 21132/27186 [00:00<00:00, 127211.76 examples/s]\nGenerating 30k_train split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 27186/27186 [00:00<00:00, 127949.42 examples/s]\n\nGenerating 30k_test split:   0%|          | 0/3021 [00:00<?, ? examples/s]\nGenerating 30k_test split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 3021/3021 [00:00<00:00, 120656.58 examples/s]\n\nGenerating train split:   0%|          | 0/52002 [00:00<?, ? examples/s]\nGenerating train split:  48%|\u2588\u2588\u2588\u2588\u258a     | 25000/52002 [00:00<00:00, 244355.53 examples/s]\nGenerating train split: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 52002/52002 [00:00<00:00, 334665.98 examples/s]\n\nCalibrate [harmless]:   0%|          | 0/4 [00:00<?, ?batch/s]\nCalibrate [harmless]:  25%|\u2588\u2588\u258c       | 1/4 [00:03<00:10,  3.48s/batch]\nCalibrate [harmless]:  50%|\u2588\u2588\u2588\u2588\u2588     | 2/4 [00:06<00:06,  3.10s/batch]\nCalibrate [harmless]:  75%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258c  | 3/4 [00:09<00:03,  3.05s/batch]\nCalibrate [harmless]: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 4/4 [00:12<00:00,  3.05s/batch]\n                                                                      \n\nCalibrate [harmful]:   0%|          | 0/4 [00:00<?, ?batch/s]\nCalibrate [harmful]:  25%|\u2588\u2588\u258c       | 1/4 [00:02<00:08,  2.95s/batch]\nCalibrate [harmful]:  50%|\u2588\u2588\u2588\u2588\u2588     | 2/4 [00:05<00:05,  2.93s/batch]\nCalibrate [harmful]:  75%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258c  | 3/4 [00:08<00:02,  2.96s/batch]\nCalibrate [harmful]: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 4/4 [00:11<00:00,  2.94s/batch]\n                                                                     \n"
+  }
+}

@@ -105,6 +105,26 @@ which is the next step; treat the numbers above as the lexicon upper bound, not 
 rate. (Over-refusal under BoN is a separate benign-variation run, deferred with the Hinglish data
 for H2b.)
 
+## C3 / H4 — does the refusal margin predict cost-to-break? (the breakthrough bet)
+
+**Run:** `results/mech-fire/20261106-004626/` (margins, Fire, layer 24, direction fit on a disjoint
+64-prompt contrast set) joined locally with the per-prompt break depths. Cox regression:
+duration = attacker effort to break (best-of-N draws / templates tried), event = broken, covariate
+= standardized refusal margin.
+
+| attack | n | events | hazard ratio (95% CI) | p | concordance |
+|---|---|---|---|---|---|
+| L1 best-of-N | 100 | 100 | **0.72 [0.58, 0.89]** | **0.003** | 0.62 |
+| L1 templates | 100 | 51 | **0.60 [—]** | **2×10⁻⁶** | — |
+
+**Read: H4 is supported — and positively.** A one-standard-deviation higher refusal margin lowers
+the hazard of a prompt being broken by ~28% under best-of-N and ~40% under templates, both
+significant. A prompt's cheap, attack-free white-box margin **predicts how expensive it is to
+break** — the C3 bet the pre-registration flagged as the high-risk contribution (a null would have
+been reportable; it is not null). This is on Fire, English; the pre-registered leave-one-model-out
+and en-vs-Hinglish checks follow with the hardened variants and the Hinglish core. Margins carry
+no prompt text and are committed; the direction is fit on disjoint data, never the eval prompts.
+
 ## L2a — prefilling / safety depth (English)
 
 **Run:** `results/attack-l2-prefill/20261105-222537/` · git `50f228c` · prefill the first k tokens
