@@ -105,6 +105,24 @@ which is the next step; treat the numbers above as the lexicon upper bound, not 
 rate. (Over-refusal under BoN is a separate benign-variation run, deferred with the Hinglish data
 for H2b.)
 
+## L2a — prefilling / safety depth (English)
+
+**Run:** `results/attack-l2-prefill/20261105-222537/` · git `50f228c` · prefill the first k tokens
+of a benign compliance opener into the assistant turn, sweep k.
+
+Safety-depth curve — ASR(k), lexicon judge (HarmBench rescoring pending, like BoN):
+
+| model  | k=1 | k=2 | k=4+ |
+|--------|-----|-----|------|
+| Fire   | 0.80 | 0.98 | 1.00 |
+| Global | 0.89 | 1.00 | 1.00 |
+
+**Read:** refusal is **shallow** (Qi et al.). A *single* forced compliance token takes ASR to
+0.80–0.89, and two tokens saturate it. A white-box attacker who can set the first word of the
+reply bypasses safety almost entirely, at essentially L0 cost (~10¹²·⁶ FLOPs). This is the
+safety-depth measurement feeding H4's "safety depth predicts prefill cost" (the depth here is ~1
+token — very shallow). Lexicon ASR is the upper bound as everywhere.
+
 ## L3a — abliteration (weight access, English)
 
 **Run:** `results/ablation/20261105-204049/` · git `538b3a3` · SafeTune AbliterationAttack, refusal
@@ -112,15 +130,14 @@ direction fit on a disjoint 64-prompt contrast set at layer 24, runtime-ablated,
 
 | model  | ASR (lexicon) | HarmBench ASR | median log₁₀ FLOPs |
 |--------|---------------|---------------|--------------------|
-| Fire   | 0.99 (119/120) | rescoring | 13.50 |
-| Global | 1.00 (120/120) | rescoring | 13.50 |
+| Fire   | 0.99 (119/120) | **0.68 [0.60, 0.76]** | 13.50 |
+| Global | 1.00 (120/120) | **0.68 [0.59, 0.75]** | 13.50 |
 
 **Read:** with weight access, both vendor models fall almost completely — abliteration surgically
 removes the refusal direction, so the model complies with nearly everything, at ~10¹³·⁵ FLOPs of
 amortised direction-fit cost. This is the weight-space end of the cost axis and the core of H3
 ("weight access ⇒ the model breaks cheaply"). The lexicon number is an upper bound as everywhere;
-the HarmBench validation is being rescored, and is expected to stay high because ablation genuinely
-strips refusal. The contrast with L0 (0.05) on the same model is the whole point: the model is
+the HarmBench validation is 0.68 (HarmBench) - the content judge trims the lexicon's 0.99, but abliteration still breaks two in three harmful prompts outright, far above L0's 0.05. The contrast with L0 (0.05) on the same model is the whole point: the model is
 safe to a direct ask and defenceless to an attacker who can edit the weights — exactly the
 on-device threat.
 
