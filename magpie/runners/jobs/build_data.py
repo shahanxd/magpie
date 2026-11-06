@@ -110,7 +110,7 @@ def main(config: dict[str, Any], out_dir: Path) -> None:
         en_all, translator, forms=forms,
         back_translate=bool(config.get("back_translate", True)),
         agreement_fn=token_overlap_agreement,
-        agreement_threshold=float(config.get("agreement_threshold", 0.25)),
+        agreement_threshold=float(config.get("agreement_threshold", 0.05)),
     )
     core = assemble_core(en_all, translations)
     _annotate_cmi(core)
