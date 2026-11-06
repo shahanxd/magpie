@@ -191,17 +191,26 @@ def l0_job(**overrides: Any) -> KernelJob:
 
 @job("attack")
 def attack_job(**overrides: Any) -> KernelJob:
-    """Run any registered attack (default l1_templates) on the vendor models + L0."""
+    """Run any registered attack (default l1_templates) on the vendor models + L0.
+
+    Pass ``core_dataset=<owner/slug>`` to attach the prebuilt parallel core and
+    evaluate its forms (en/hing/hi-Deva) instead of the English benchmarks; the
+    worker then loads core.jsonl from the mount and the table groups by form.
+    """
     attack = overrides.pop("attack", "l1_templates")
+    core_dataset = overrides.pop("core_dataset", None)
     cfg = {"attack": attack, "models": ["fire", "global"], "n_harmful": 150, "n_benign": 150,
            "max_new_tokens": 192, "seed": 0, "vllm_spec": "vllm==0.33.0",
            "worker": "magpie.runners.jobs.l0", "timeout_s": 3 * 3600}
     cfg.update(overrides)
+    if core_dataset:
+        cfg["use_core"] = True
     models = cfg.get("models", ["fire", "global"])
     model_keys = [m for m in models if m in MODELS]
     return KernelJob(name=f"attack-{attack.replace('_', '-')}",
                      entrypoint="magpie.runners.jobs.launch:main", config=cfg,
-                     models=model_keys, timeout_s=cfg["timeout_s"])
+                     models=model_keys, dataset_sources=[core_dataset] if core_dataset else [],
+                     timeout_s=cfg["timeout_s"])
 
 
 # Aya Expanse 8B on the Kaggle Models mirror (needs a one-time licence accept);

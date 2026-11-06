@@ -30,7 +30,43 @@ from magpie.serve.base import Generator
 from magpie.types import PromptRecord
 
 
+def _load_core(config: dict[str, Any]) -> tuple[list[PromptRecord], list[PromptRecord]]:
+    """Load a prebuilt parallel core (v2) from a mounted dataset, filtered by form.
+
+    ``config["forms"]`` selects which language forms to evaluate (default all
+    present). The result table groups by form, so one run yields the en vs
+    Hinglish vs Devanagari comparison (H1). Caps per form via n_harmful/n_benign.
+    """
+    from pathlib import Path
+
+    from magpie.data.loaders import read_records
+    from magpie.data.seeds import stratified_sample
+
+    core_path = config.get("core_path")
+    if not core_path:
+        root = Path("/kaggle/input")
+        hits = sorted(root.rglob("core.jsonl")) if root.is_dir() else []
+        core_path = str(hits[0]) if hits else None
+    if not core_path or not Path(core_path).is_file():
+        raise FileNotFoundError("no core.jsonl found; set config['core_path'] or attach the core")
+    recs = read_records(core_path)
+    forms = config.get("forms") or sorted({r.form for r in recs})
+    n_harm, n_benign = int(config.get("n_harmful", 150)), int(config.get("n_benign", 150))
+    harmful, benign = [], []
+    for form in forms:
+        fh = [r for r in recs if r.form == form and r.is_harmful]
+        fb = [r for r in recs if r.form == form and not r.is_harmful]
+        harmful += stratified_sample(fh, n=n_harm, seed=config.get("seed", 0)) if fh else []
+        benign += stratified_sample(fb, n=n_benign, seed=config.get("seed", 0),
+                                    key="source") if fb else []
+    print(f"core {core_path}: {len(harmful)} harmful, {len(benign)} benign over forms {forms}",
+          flush=True)
+    return harmful, benign
+
+
 def _load_prompts(config: dict[str, Any]) -> tuple[list[PromptRecord], list[PromptRecord]]:
+    if config.get("core_path") or config.get("use_core"):
+        return _load_core(config)
     from magpie.data.seeds import (
         load_harmbench,
         load_orbench_hard,
