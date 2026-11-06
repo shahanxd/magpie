@@ -2,7 +2,7 @@
 
 Read this together with `docs/PLAN.md` (plan v2) before doing any work. It records what has been decided, what has been checked, and what happens next.
 
-**Status (Nov 6, 2026):** plan v2 **approved**; results phase well advanced. The full English attacker ladder (L0→L3), the per-form H1 study, C2 best-of-N, the C3/H4 Cox audit, the C4 judge-validity headline, and the M2/M3 hardening re-attack have all landed on Kaggle T4s and are committed, lexicon + HarmBench-validated. The v2 Aya parallel core (1200 records) is on private HF with a native-review sheet, the hero figure is generated, and a **draft HF submission article** (`docs/ARTICLE.md`) is written. CPU CI is green. See §3 for verified env numbers, `docs/RESULTS.md` for every table with provenance, `docs/ARTICLE.md` for the write-up, and §6 for what remains.
+**Status (Nov 6, 2026):** plan v2 **approved**; results + packaging phase essentially complete. The full English attacker ladder (L0→L3), the per-form H1 study, C2 best-of-N, the C3/H4 Cox audit (now with a positive leave-one-model-out generalization), the C4 judge-validity headline, and the M2/M3 hardening re-attack (a clean negative) have all landed on Kaggle T4s and are committed, lexicon + HarmBench-validated. The v2 Aya parallel core (1200 records) is on private HF with a native-review sheet. The submission artifacts are built: the HF article, robustness cards, a self-contained HF Space, `make reproduce-core`, the C5 upstream patches, and a human-steps guide. CPU CI is green. What remains is human-only (HF publishing, opening the prepared PRs, native review, the organizer ticket) — see `docs/HUMAN_STEPS.md`. See §3 for verified env numbers, `docs/RESULTS.md` for every table with provenance, and §6 for the full done/remaining split.
 
 ---
 
@@ -109,16 +109,12 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - **C4 judge validity (headline):** lexicon over-counts 4–5× and flips rankings — within English (BoN vs templates) and cross-lingually (lexicon says Devanagari 4× English & Hinglish safest; HarmBench says Devanagari ≈9× English, Hinglish ≈ English).
 - **H1 per-form L0** on the v2 Aya core, HarmBench: en 0.03 / hing 0.03 / hi-Deva 0.28 (real but modest script gap; `perform_verdict_breakdown.json` dissects the lexicon artifact).
 - **C2 best-of-N:** synthetic noise (en) scales steeply (b=−1.93); natural Hinglish respelling is flat (b≈0) — the power law is an adversarial-noise effect.
-- **C3 / H4 (the bet, positive):** refusal margin predicts cost-to-break, Cox hazard ratio 0.72 (BoN, p=0.003) / 0.60 (templates, p=2×10⁻⁶).
+- **C3 / H4 (the bet, positive, and it generalizes):** refusal margin predicts cost-to-break, Cox HR 0.72 (BoN, p=0.003) / 0.60 (templates, p=2×10⁻⁶). **Leave-one-model-out:** Global HR 0.67, pooled 0.64 [0.56, 0.73], p=2×10⁻¹¹ — the predictor works on a model it was not tuned on (`scripts/h4_lomo.py`).
 - **Hardening:** M2 RR (`fire_rr`) trained and re-attacked paired vs vendor Fire — **raises attacker cost at no level** (HarmBench templates 0.30 vs 0.30, prefill 0.31 vs 0.31; identical safety-depth curve). M3 RepNoise collapsed the model (guard-flagged). Both are honest negatives.
 - **Data v2 Aya parallel core:** 1200 records (400 en/hing/hi-Deva), private HF `shahanxd/magpie-core-v2`, with a native-review sheet.
-- **Hero figure** (`docs/figures/hero_ladder.png`) and the **draft HF article** (`docs/ARTICLE.md`).
+- **Submission artifacts:** hero figure (all-HarmBench), the HF **article** (`docs/ARTICLE.md`), per-model **robustness cards** (`docs/cards/`), a self-contained **HF Space** (`space/`), **`make reproduce-core`** + `docs/REPRODUCE.md`, **C5 upstream patches** (`contrib/`), and a plain **human-steps guide** (`docs/HUMAN_STEPS.md`).
 
-**Remaining (next):**
-1. **Robustness cards** — one-page deployer-facing summary per model (Fire, Global, fire_rr) with the cost ladder and over-refusal.
-2. **HF Space** + reproducibility README pass + a `make reproduce-core` entry point; push the hardened `fire_rr` to an HF model collection (attacked/abliterated weights stay unpublished).
-3. **H4 extensions** (pre-registered): leave-one-model-out and the en-vs-Hinglish margin check (needs Hinglish-core margins).
-4. **C5 upstream PRs:** script-/Hinglish-aware BoN + multilingual refusal matcher (SafeTune), Indic red-team pack (AuditKIT).
+**Remaining — human-only (see `docs/HUMAN_STEPS.md`):** publish to HF (article, collections, deploy the Space, optionally the hardened `fire_rr`); open the C5 PRs from the prepared `contrib/` patches; native-speaker review of the sheet; the organizer Discord ticket; the 3050 GGUF laptop demo. **Blocked science:** the en-vs-Hinglish H4 margin check — the model collapses on Hinglish, so there are too few break events for a well-powered Cox (itself a finding).
 
 **Known environment facts for GPU jobs:** the vLLM venv on Kaggle must also carry `accelerate`, `datasets`, `curatorkit`, `sentencepiece`, `tiktoken` (now installed by `install_vllm_venv`); release vLLM between models with `VLLMBackend.close()`; attach a Kaggle model source with its version (`.../8b/5`); Aya Expanse (`cohereforai/aya-expanse`) is gated on Kaggle and needs manual licence acceptance before it will mount.
 

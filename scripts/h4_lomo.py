@@ -32,7 +32,7 @@ SOURCES = {
 def _load(margins_path: str, outcomes_path: str):
     mz = json.loads((ROOT / margins_path).read_text())["margins_z"]
     outs = [SimpleNamespace(prompt_id=d["prompt_id"], n_attempts=d["n_attempts"], broken=d["broken"])
-            for d in (json.loads(l) for l in (ROOT / outcomes_path).read_text().splitlines() if l.strip())]
+            for d in (json.loads(ln) for ln in (ROOT / outcomes_path).read_text().splitlines() if ln.strip())]
     return mz, outs
 
 

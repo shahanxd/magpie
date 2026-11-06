@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import glob
 import json
-import shutil
 from pathlib import Path
 
 from magpie.analysis.figures import build_hero
