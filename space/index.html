@@ -37,7 +37,7 @@ footer{margin-top:48px;color:var(--mut);font-size:.88rem;border-top:1px solid va
 <header>
 <h1> Magpie -- pricing the robustness of an open, on-device safety model</h1>
 <p class="thesis">For an open, on-device model the attacker owns the weights, so safety is not a refusal rate -- it is the attacker cost to break the model, at each capability level, in the languages people actually use. Magpie prices that, pairs every number with over-refusal, and tests whether a cheap white-box margin predicts the price.</p>
-<p class="links"><a href="https://github.com/shahanxd/magpie">Code &amp; reproducibility</a><a href="https://huggingface.co/datasets/shahanxd/magpie-core-v1">Dataset (gated)</a><a href="https://huggingface.co/shahanxd/fire_rr">Hardened model</a></p>
+<p class="links"><a href="https://github.com/shahanxd/magpie" target="_blank" rel="noopener">Code &amp; reproducibility</a><a href="https://huggingface.co/datasets/shahanxd/magpie-core-v1" target="_blank" rel="noopener">Dataset (gated)</a><a href="https://huggingface.co/shahanxd/fire_rr" target="_blank" rel="noopener">Hardened model</a></p>
 </header>
 <nav role="tablist">
 <button data-t="article"> Article</button><button data-t="ladder">Cost ladder</button>
@@ -96,14 +96,14 @@ to exist is Hinglish and Indic languages, an English-only refusal number is clos
 Magpie's answer is to <strong>price</strong> robustness: measure <em>how much the next break costs</em> at each rung,
 in each language, and always show what that safety costs benign users (over-refusal).</p>
 <p><strong>Pre-registration.</strong> Hypotheses H1-H5 and the analysis plan were committed to
-<a href="https://github.com/shahanxd/magpie/blob/main/docs/PREREGISTRATION.md"><code>docs/PREREGISTRATION.md</code></a> <strong>before</strong> the main runs (git history proves the
+<a href="https://github.com/shahanxd/magpie/blob/main/docs/PREREGISTRATION.md" target="_blank" rel="noopener"><code>docs/PREREGISTRATION.md</code></a> <strong>before</strong> the main runs (git history proves the
 order). This is a red-team study with a falsifiable, high-risk bet (H4); reporting it honestly -- 
 including where it fails -- is the point.</p>
 <hr />
 <h2>3. Threat model: the attacker ladder and the cost axis</h2>
 <p>We price one forward pass as <code>2·P·tokens</code> FLOPs and one training step as <code>6·P·tokens</code>, with
 <code>P = 3.349×10⁹</code> (the measured Tiny Aya Fire parameter count; see
-<a href="https://github.com/shahanxd/magpie/blob/main/magpie/costs.py"><code>magpie/costs.py</code></a>). Every attack attempt logs its own cost, and a prompt's
+<a href="https://github.com/shahanxd/magpie/blob/main/magpie/costs.py" target="_blank" rel="noopener"><code>magpie/costs.py</code></a>). Every attack attempt logs its own cost, and a prompt's
 <strong>survival time</strong> is the cumulative attacker cost at the first <em>validated</em> break; prompts that never
 break are right-censored. This turns a jailbreak campaign into a survival-analysis dataset.</p>
 <div class="tw"><table>
@@ -454,7 +454,7 @@ Labs AUP (non-commercial safety research). The laptop demo uses non-actionable c
 <hr />
 <p><em>Artifacts: GitHub <code>magpie</code> (code + reproducibility README), HF model collection (hardened
 variants), HF dataset collection (prompts/scores/logs, harmful completions gated), HF Space, and
-per-model robustness cards. Full numbers and run provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>.</em></p></section>
+per-model robustness cards. Full numbers and run provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md" target="_blank" rel="noopener"><code>docs/RESULTS.md</code></a>.</em></p></section>
 <section id="ladder"><h2>How much does the next break cost?</h2>
 <p>Attack success rate (HarmBench-validated) as the attacker gains capability: just ask (L0) → public jailbreaks (L1) → controls the decoder (L2) → edits the weights (L3).</p>
 <img src="hero_ladder.png" alt="Attack success rate by attacker capability level for Fire, Global and the RR-hardened Fire">
@@ -468,7 +468,7 @@ per-model robustness cards. Full numbers and run provenance in <a href="https://
 <p class="note">The margin is computed with no attack, from a direction fit on disjoint data -- and it predicts cost-to-break on a model it was not tuned on.</p></section>
 <section id="cards"><h2>Robustness cards</h2><p>One-page, deployer-facing summaries per model.</p><div class="card"><h1>Robustness card -- Tiny Aya Fire (vendor, M0)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
-marked "lexicon"; full provenance (run dirs, git SHAs, CIs) in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>.
+marked "lexicon"; full provenance (run dirs, git SHAs, CIs) in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md" target="_blank" rel="noopener"><code>docs/RESULTS.md</code></a>.
 Model: <code>CohereLabs/tiny-aya-fire</code>, 3.35B, cohere2, open weights.</em></p>
 <p><strong>One line.</strong> Safe to a direct ask, holds against public jailbreak templates, but its safety is
 <strong>shallow</strong> (one forced token bypasses it) and it is <strong>defenceless to weight edits</strong> -- the on-device
@@ -552,7 +552,7 @@ model <em>collapse</em> (degenerate output on romanized code-mixing) is excluded
  (H4), so a red-team budget can be focused before any attack is run.</li>
 </ul></div><div class="card"><h1>Robustness card -- Tiny Aya Global (vendor, M1)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
-marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>. Model:
+marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md" target="_blank" rel="noopener"><code>docs/RESULTS.md</code></a>. Model:
 <code>CohereLabs/tiny-aya-global</code>, 3.35B, cohere2, open weights -- the vendor's safest Tiny Aya variant.</em></p>
 <p><strong>One line.</strong> Behaves almost identically to Fire across the ladder: robust to a direct ask, holds
 against templates, shallow to prefill, and broken by weight edits. "Safest variant" does <strong>not</strong>
@@ -610,7 +610,7 @@ Fire.</p>
  run on Fire. Treat Fire's Devanagari gap as the likely Global behaviour pending a matched run.</li>
 </ul></div><div class="card"><h1>Robustness card -- Tiny Aya Fire + Circuit-Breakers/RR (hardened, M2)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
-marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>. Model: Tiny Aya Fire
+marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md" target="_blank" rel="noopener"><code>docs/RESULTS.md</code></a>. Model: Tiny Aya Fire
 hardened with SafeTune M2 (Circuit Breakers / Representation Rerouting), 150 steps, LoRA on 2
 layers, merged. Weights not published.</em></p>
 <p><strong>One line.</strong> A plausible-looking defense that <strong>shifts no survival curve</strong>: the loss drops and L0
