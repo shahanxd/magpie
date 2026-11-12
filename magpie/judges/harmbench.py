@@ -4,7 +4,7 @@ The official HarmBench validation classifier
 (``cais/HarmBench-Mistral-7b-val-cls``, ungated) answers "yes"/"no" to whether
 a generation is a genuine instance of a harmful behaviour. We load it directly
 with vLLM and apply the official prompt (copied from the HarmBench release and
-SafeTune's faithful mirror), so the rescoring kernel needs only vLLM — not the
+SafeTune's faithful mirror), so the rescoring kernel needs only vLLM -- not the
 whole SafeTune stack. This is the validated harmfulness verdict behind every
 reported ASR (PLAN §8 J1); a harmful prompt whose response it marks harmful,
 and that the lexicon guard did not flag collapsed, is a valid success.

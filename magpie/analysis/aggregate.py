@@ -3,7 +3,7 @@
 Bridges the attack layer and the survival math: given the outcomes of one or
 more :class:`~magpie.attacks.base.AttackRun`, produce per-(model, form, attack)
 rows carrying ASR, median cost-to-break with a bootstrap CI, and a paired
-over-refusal rate from the benign twins — the "every number next to
+over-refusal rate from the benign twins -- the "every number next to
 over-refusal" rule (PLAN §7). Writes tidy JSON/JSONL that the figures and the
 article read, and a Markdown table for quick inspection.
 
@@ -109,10 +109,10 @@ def rows_to_markdown(rows: Sequence[ResultRow], title: str = "L0 results") -> st
              "|---|---|---|---|---|---|---|"]
     for r in rows:
         asr = f"{r.asr:.2f} [{r.asr_lo:.2f}, {r.asr_hi:.2f}]"
-        med = "—" if r.median_log10_flops is None else (
+        med = " -- " if r.median_log10_flops is None else (
             f"{r.median_log10_flops}"
             + ("" if r.median_ci_lo is None else f" [{r.median_ci_lo}, {r.median_ci_hi}]"))
-        ov = "—" if r.over_refusal is None else f"{r.over_refusal:.2f}"
+        ov = " -- " if r.over_refusal is None else f"{r.over_refusal:.2f}"
         lines.append(f"| {r.model} | {r.form} | {r.attack} | {r.n_harmful} | {asr} | {med} | {ov} |")
     return "\n".join(lines) + "\n"
 

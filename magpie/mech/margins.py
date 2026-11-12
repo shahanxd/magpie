@@ -1,4 +1,4 @@
-"""Per-prompt refusal margins — the white-box predictor for C3 / H4.
+"""Per-prompt refusal margins -- the white-box predictor for C3 / H4.
 
 The refusal direction (Arditi et al.) is the single direction whose ablation
 removes refusal. A prompt's **refusal margin** is the projection of its

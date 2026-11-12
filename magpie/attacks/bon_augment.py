@@ -5,9 +5,9 @@ These are the *synthetic* baseline that Magpie's natural-Hinglish augmenter
 augmentations and their ``sigma``-derived probabilities are reimplemented here
 from the authors' ``run_text_bon.py`` (and match SafeTune's ``BoNAttack``):
 
-* word scrambling — interior letters of words > 3 chars, p = sigma**0.5
-* random capitalization — per letter case flip, p = sigma**0.5
-* ASCII noising — per printable char ±1 code point, p = sigma**3
+* word scrambling -- interior letters of words > 3 chars, p = sigma**0.5
+* random capitalization -- per letter case flip, p = sigma**0.5
+* ASCII noising -- per printable char ±1 code point, p = sigma**3
 
 All three are applied, in that order, to every variant; diversity comes from
 the per-character sampling, not from choosing a subset. Keeping our own copy

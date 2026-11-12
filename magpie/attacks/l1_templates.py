@@ -1,4 +1,4 @@
-"""L1a — jailbreak templates, in English and Hinglish (PLAN §6).
+"""L1a -- jailbreak templates, in English and Hinglish (PLAN §6).
 
 Five families: role-play / hypothetical, refusal suppression, prefix injection,
 past-tense reformulation (never tested in Hinglish as far as we found), and
@@ -8,7 +8,7 @@ would type, not translationese. Templates wrap the prompt; they contain no
 harmful content themselves.
 
 The templates are deliberately mild, well-known public jailbreak *structures*
-(the kind every red-team baseline uses) — the point is to measure how much a
+(the kind every red-team baseline uses) -- the point is to measure how much a
 hardened model's refusal cost moves under ordinary framing tricks, per form.
 """
 

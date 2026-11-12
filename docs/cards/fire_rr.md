@@ -1,4 +1,4 @@
-# Robustness card — Tiny Aya Fire + Circuit-Breakers/RR (hardened, M2)
+# Robustness card -- Tiny Aya Fire + Circuit-Breakers/RR (hardened, M2)
 
 *A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
 marked "lexicon"; full provenance in [`docs/RESULTS.md`](../RESULTS.md). Model: Tiny Aya Fire
@@ -18,19 +18,19 @@ is the honest negative the cost framing is built to surface.
 | L2 prefill | **0.31** HarmBench | **0.31** HarmBench | none |
 | L2 prefill curve | k=1 0.80, k=2 0.98, k≥4 1.00 | **identical** | none |
 
-The checkpoint is genuinely the hardened one — its completions differ prompt-by-prompt from Fire's,
-so the merged weights loaded — it simply does not cost more to break.
+The checkpoint is genuinely the hardened one -- its completions differ prompt-by-prompt from Fire's,
+so the merged weights loaded -- it simply does not cost more to break.
 
 ## Verdict for a deployer
 
 - **Do not ship a defense on its training loss.** RR here drove loss 5.0→0.50 and left L0 clean,
   yet moved no attacker-cost curve. Validate a defense by re-attacking it and measuring the
   survival curve, not by its loss or its L0 refusal rate.
-- **Representation rerouting did not touch prefill at all** (safety-depth curve byte-identical) —
+- **Representation rerouting did not touch prefill at all** (safety-depth curve byte-identical) -- 
   a shallow-safety attack needs a depth-targeted defense (Qi et al.), not RR.
 - A heavier RR schedule (more steps, more layers) or a different method (CAST) is required before
   any hardening claim; this lightweight pass is not sufficient.
 
 > Companion negative: **M3 RepNoise** on the same model *collapsed* it (all outputs degenerate),
-> which the collapse guard flagged automatically — a defense that zeroes ASR by destroying utility.
+> which the collapse guard flagged automatically -- a defense that zeroes ASR by destroying utility.
 > Neither lightweight defense is deployable as-is.

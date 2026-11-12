@@ -1,7 +1,7 @@
 """Publish datasets, models and the Space to the Hugging Face Hub.
 
 Runs in the dev environment (which holds ``HF_TOKEN``), never in a Kaggle
-kernel — so the write token never leaves here. The data-build job writes the
+kernel -- so the write token never leaves here. The data-build job writes the
 dataset payload under ``results/.../raw/``; this uploads it to a **private**
 dataset repo (gating is configured on the Hub afterwards). Attacked or
 abliterated weights are never published (PLAN §16); only hardened variants and

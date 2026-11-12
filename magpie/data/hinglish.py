@@ -1,6 +1,6 @@
 """Hinglish: code-mixing measurement and natural spelling variation.
 
-This module underpins contribution **C2** — *ordinary Hinglish typing is itself
+This module underpins contribution **C2** -- *ordinary Hinglish typing is itself
 a best-of-N attack*. Where the standard BoN attack perturbs a prompt with
 synthetic noise (random capitals, ASCII flips, scrambles), Magpie samples the
 variation real Hinglish users produce:
@@ -80,7 +80,7 @@ HI_TO_EN: dict[str, str] = {}
 for _en, _hi in EN_TO_HI.items():
     HI_TO_EN.setdefault(_hi, _en)
 
-# A "word" is a run of Latin letters or a run of Devanagari (block U+0900–U+097F,
+# A "word" is a run of Latin letters or a run of Devanagari (block U+0900-U+097F,
 # which includes the matras and virama that \w would split a word on).
 _WORD_RE = re.compile(r"[A-Za-z]+|[ऀ-ॿ]+")
 _TOKEN_RE = re.compile(r"[A-Za-z]+|[ऀ-ॿ]+|\d+|\s+|[^\sA-Za-zऀ-ॿ\d]")
@@ -260,7 +260,7 @@ class HinglishAugmenter:
     """Sample natural-looking Hinglish rewrites of a prompt (deterministic per seed).
 
     Unlike synthetic BoN noise, every rewrite is a spelling a real user might
-    plausibly type, so comprehension is preserved — which is exactly what makes
+    plausibly type, so comprehension is preserved -- which is exactly what makes
     it a fair *natural* best-of-N distribution (C2) and, applied to benign
     prompts, a test of orthographic over-refusal (H2b).
     """

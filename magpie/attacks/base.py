@@ -1,6 +1,6 @@
 """The one attack interface, with automatic cost logging and survival bookkeeping.
 
-Every attack — from typing a prompt (L0) to editing weights (L3) — subclasses
+Every attack -- from typing a prompt (L0) to editing weights (L3) -- subclasses
 :class:`Attack` and only has to say *how it varies a prompt*. The shared
 :class:`AttackRunner` does the rest: it generates (batched), judges, accumulates
 :class:`~magpie.costs.AttackCost`, stops at the first *valid* success, and emits

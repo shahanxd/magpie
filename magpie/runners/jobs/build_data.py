@@ -5,7 +5,7 @@ Aya Expanse 8B on the T4: translates the core into Hinglish and Devanagari with
 a back-translation agreement gate, assembles the parallel core, de-duplicates
 and stamps provenance with CuratorKIT, annotates CMI, and writes:
 
-* ``records.jsonl`` (full, with prompt text) under ``raw/`` — gitignored; this
+* ``records.jsonl`` (full, with prompt text) under ``raw/`` -- gitignored; this
   is the private/gated dataset payload pushed to HF from the dev environment,
 * ``manifest.json`` and ``dataset_card.md`` (committable; counts + provenance,
   no prompt text),

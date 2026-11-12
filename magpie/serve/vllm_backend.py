@@ -104,7 +104,7 @@ class VLLMBackend:
         vLLM holds device memory in engine/worker state that ``del`` alone does
         not free; the documented teardown tears down the (single-GPU) model
         parallel state first. Best-effort and import-guarded across vLLM
-        versions — callers that need a hard guarantee run one model per process.
+        versions -- callers that need a hard guarantee run one model per process.
         """
         import gc
 

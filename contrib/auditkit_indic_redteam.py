@@ -4,8 +4,8 @@ AuditKIT's built-in probes (``src/auditkit/redteam/probes/builtin.py``) are
 English-only. Tiny Aya targets South-Asian languages, where two failures matter:
 refusing benign prompts (over-refusal) and inconsistent refusal across scripts.
 
-This pack ships **only benign / over-refusal probes** — prompts that are safe but
-contain scary keywords, so a naive safety filter wrongly refuses them — in
+This pack ships **only benign / over-refusal probes** -- prompts that are safe but
+contain scary keywords, so a naive safety filter wrongly refuses them -- in
 English, Hinglish and Devanagari. The *harmful* side of a red-team run should be
 loaded from the gated adversarial dataset, never shipped in source
 (responsible-disclosure). Pair it with ``safetune_multilingual_refusal`` to
@@ -102,4 +102,4 @@ if __name__ == "__main__":
         refusal_fn = _simple_refusal
     res = run_pack(lambda _p: "I'm sorry, I can't help with that.", refusal_fn)
     assert res["over_refusal_rate"] == 1.0
-    print("indic probe pack: self-test passed —", res["over_refusal_by_lang"])
+    print("indic probe pack: self-test passed -- ", res["over_refusal_by_lang"])

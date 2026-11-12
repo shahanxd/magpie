@@ -26,7 +26,7 @@ class LexiconJudge:
 
     Writes ``attempt.judgements["refusal_lexicon"]``. ``is_success`` is True only
     for a harmful prompt whose response both fails to refuse *and* is not a
-    collapse — so the tool gap (missing non-English refusals) and off-switch
+    collapse -- so the tool gap (missing non-English refusals) and off-switch
     failures cannot inflate ASR.
     """
 
@@ -61,7 +61,7 @@ class CompositeJudge:
 
     ``score`` runs all sub-judges (so every judgement is recorded for the
     agreement analysis). ``is_success`` ANDs their ``is_success``, so adding a
-    judge can only make the gate stricter — the plan's "second-judge agreement"
+    judge can only make the gate stricter -- the plan's "second-judge agreement"
     requirement. ``primary`` provides the headline verdict.
     """
 

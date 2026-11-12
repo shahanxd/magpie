@@ -2,7 +2,7 @@
 
 The model fixture is a *tiny random cohere2* network (Tiny Aya's architecture,
 two layers, hidden 32), paired with an offline character-level tokenizer that
-carries a Cohere-style chat template. No network, no HF token, no GPU — the
+carries a Cohere-style chat template. No network, no HF token, no GPU -- the
 same approach SafeTune's own test-suite uses for Tiny Aya.
 """
 

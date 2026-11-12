@@ -2,7 +2,7 @@
 
 Read this together with `docs/PLAN.md` (plan v2) before doing any work. It records what has been decided, what has been checked, and what happens next.
 
-**Status (Nov 6, 2026):** plan v2 **approved**; results + packaging phase essentially complete. The full English attacker ladder (L0→L3), the per-form H1 study, C2 best-of-N, the C3/H4 Cox audit (now with a positive leave-one-model-out generalization), the C4 judge-validity headline, and the M2/M3 hardening re-attack (a clean negative) have all landed on Kaggle T4s and are committed, lexicon + HarmBench-validated. The v2 Aya parallel core (1200 records) is on private HF with a native-review sheet. The submission artifacts are built: the HF article, robustness cards, a self-contained HF Space, `make reproduce-core`, the C5 upstream patches, and a human-steps guide. CPU CI is green. What remains is human-only (HF publishing, opening the prepared PRs, native review, the organizer ticket) — see `docs/HUMAN_STEPS.md`. See §3 for verified env numbers, `docs/RESULTS.md` for every table with provenance, and §6 for the full done/remaining split.
+**Status (Nov 6, 2026):** plan v2 **approved**; results + packaging phase essentially complete. The full English attacker ladder (L0→L3), the per-form H1 study, C2 best-of-N, the C3/H4 Cox audit (now with a positive leave-one-model-out generalization), the C4 judge-validity headline, and the M2/M3 hardening re-attack (a clean negative) have all landed on Kaggle T4s and are committed, lexicon + HarmBench-validated. The v2 Aya parallel core (1200 records) is on private HF with a native-review sheet. The submission artifacts are built: the HF article, robustness cards, a self-contained HF Space, `make reproduce-core`, the C5 upstream patches, and a human-steps guide. CPU CI is green. What remains is human-only (HF publishing, opening the prepared PRs, native review, the organizer ticket) -- see `docs/HUMAN_STEPS.md`. See §3 for verified env numbers, `docs/RESULTS.md` for every table with provenance, and §6 for the full done/remaining split.
 
 ---
 
@@ -25,7 +25,7 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - GitHub: this repo, push access from the dev environment.
 - Secrets (environment variables): `HF_TOKEN` (write), `KAGGLE_USERNAME`, `KAGGLE_API_TOKEN`, `KAGGLE_KEY`.
   - The Kaggle credential is the **new-style single API token**, stored under both names. Try `KAGGLE_API_TOKEN` first and fall back to `KAGGLE_KEY`.
-  - Only the owner's Kaggle account is set for now. Ask the team for `KAGGLE_USERNAME_2/_3` + tokens when the GPU quota gets tight (expected around Nov 7–8).
+  - Only the owner's Kaggle account is set for now. Ask the team for `KAGGLE_USERNAME_2/_3` + tokens when the GPU quota gets tight (expected around Nov 7-8).
 - Gated HF access requested: tiny-aya-fire, -global, -base, aya-expanse-8b, meta-llama/Llama-Guard-3-8B, allenai/wildguard (Meta/AllenAI may still be pending). Check before relying on them.
 - Network from the dev environment, verified Nov 4: kaggle.com, huggingface.co, pypi.org, api.groq.com, openrouter.ai reachable.
 - Tiny Aya is mirrored on **Kaggle Models** (`cohere-labs/tiny-aya`, 5 variations). Attach it as a model source in Kaggle notebooks, so no HF token is needed there.
@@ -54,7 +54,7 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 
 ### Verified in the build environment (Nov 4, from runs, not memory)
 - **Tiny Aya Fire config (from HF):** `cohere2`, 36 layers, hidden 2048, d_mlp 11008, 16 heads / 4 KV, head_dim 128, vocab 262144, embeddings tied → **P ≈ 3.349B** (matches the 3.35B tech-report figure; `magpie.costs` is built on this). Chat template adds a **~370-token** system preamble; generation EOS is `<|END_OF_TURN_TOKEN|>`, pad id 0.
-- **Smoke test on Kaggle T4 (fp16), both backends green in one run:** vLLM 0.33 **208 tok/s** batch (load ~160 s, CUDA-graph capture slow on Turing), HF transformers **123 tok/s** batch / ~18 tok/s single. **fp16 is numerically stable**: logits finite, max layer activation ~680 (×96 headroom under 65504), KL = 0.0000 and top-1 match vs an fp32 CPU reference, 0 degenerate outputs on en+Hinglish. Caveat: `torch.cuda.is_bf16_supported()` returns **True** on the T4 (emulated on Turing) — ignore it, use fp16.
+- **Smoke test on Kaggle T4 (fp16), both backends green in one run:** vLLM 0.33 **208 tok/s** batch (load ~160 s, CUDA-graph capture slow on Turing), HF transformers **123 tok/s** batch / ~18 tok/s single. **fp16 is numerically stable**: logits finite, max layer activation ~680 (×96 headroom under 65504), KL = 0.0000 and top-1 match vs an fp32 CPU reference, 0 degenerate outputs on en+Hinglish. Caveat: `torch.cuda.is_bf16_supported()` returns **True** on the T4 (emulated on Turing) -- ignore it, use fp16.
 - **Kaggle env:** 2×T4 (15 GB each, sm_75, driver CUDA 13.0), system torch 2.11.0+cu130, Python 3.13, 32.9 GB RAM, ~21 GB free disk. vLLM 0.33 (pins torch 2.14) installs into an isolated venv in ~60 s; the HF fallback runs in system Python (it has `accelerate`, which the venv lacks). The model mounts at `/kaggle/input/models/cohere-labs/tiny-aya/transformers/<variant>/1`.
 - **Kaggle GPU quota:** 30 h/week on the owner's account, unused as of Nov 4. (More accounts wire in via `KAGGLE_*_2/_3`.)
 - **HF gated access (owner's token):** Fire, Global, Base, Aya-Expanse-8B, **Llama-Guard-3-8B**, WildGuard, HarmBench classifiers and the StrongREJECT scorer are **accessible**; Llama-Guard-3-1B and shieldgemma-2b are **still gated** (request if needed).
@@ -62,7 +62,7 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - **Seed sources (public, loaded live):** HarmBench standard **200** (GitHub CSV), StrongREJECT **313** (GitHub CSV), XSTest-safe **250**, OR-Bench-Hard **1k** (both HF, public). The walledai mirrors are gated; we use the canonical sources. A stratified core of 200 harmful seeds spreads ~22 per category across 9 unified categories.
 
 ## 4. Hackathon facts
-- Registration closes Nov 5 · submission **Nov 14, end of day (Anywhere on Earth)** (plan: v1 on Nov 12) · shortlist Nov 16 · prove-thesis window Nov 16–21 (+$200 HF credits) · Demo Day Nov 22.
+- Registration closes Nov 5 · submission **Nov 14, end of day (Anywhere on Earth)** (plan: v1 on Nov 12) · shortlist Nov 16 · prove-thesis window Nov 16-21 (+$200 HF credits) · Demo Day Nov 22.
 - Rubric: write-up clarity /10, practical usefulness /10, code quality /10, overall /100. Double-blind, multiple judges.
 - Rules:
   - chain ≥2 Track 2 repos (we use all 4)
@@ -104,17 +104,17 @@ Read this together with `docs/PLAN.md` (plan v2) before doing any work. It recor
 - Data (`magpie.data`): seed loaders, harm taxonomy, stratification, parallel-core assembly.
 - `docs/PREREGISTRATION.md` committed before the runs.
 
-**Done (runs landed, committed — see `docs/RESULTS.md` for tables, `docs/ARTICLE.md` for the write-up):**
-- **English cost ladder on Fire/Global**, lexicon + HarmBench-validated: L0 direct (HarmBench 0.05), L1 templates (0.29), L1 best-of-N synthetic (0.19), L2 prefill (0.31, shallow — 1 token → 0.80), L3a abliteration (0.68, weight access).
-- **C4 judge validity (headline):** lexicon over-counts 4–5× and flips rankings — within English (BoN vs templates) and cross-lingually (lexicon says Devanagari 4× English & Hinglish safest; HarmBench says Devanagari ≈9× English, Hinglish ≈ English).
+**Done (runs landed, committed -- see `docs/RESULTS.md` for tables, `docs/ARTICLE.md` for the write-up):**
+- **English cost ladder on Fire/Global**, lexicon + HarmBench-validated: L0 direct (HarmBench 0.05), L1 templates (0.29), L1 best-of-N synthetic (0.19), L2 prefill (0.31, shallow -- 1 token → 0.80), L3a abliteration (0.68, weight access).
+- **C4 judge validity (headline):** lexicon over-counts 4-5× and flips rankings -- within English (BoN vs templates) and cross-lingually (lexicon says Devanagari 4× English & Hinglish safest; HarmBench says Devanagari ≈9× English, Hinglish ≈ English).
 - **H1 per-form L0** on the v2 Aya core, HarmBench: en 0.03 / hing 0.03 / hi-Deva 0.28 (real but modest script gap; `perform_verdict_breakdown.json` dissects the lexicon artifact).
-- **C2 best-of-N:** synthetic noise (en) scales steeply (b=−1.93); natural Hinglish respelling is flat (b≈0) — the power law is an adversarial-noise effect.
-- **C3 / H4 (the bet, positive, and it generalizes):** refusal margin predicts cost-to-break, Cox HR 0.72 (BoN, p=0.003) / 0.60 (templates, p=2×10⁻⁶). **Leave-one-model-out:** Global HR 0.67, pooled 0.64 [0.56, 0.73], p=2×10⁻¹¹ — the predictor works on a model it was not tuned on (`scripts/h4_lomo.py`).
-- **Hardening:** M2 RR (`fire_rr`) trained and re-attacked paired vs vendor Fire — **raises attacker cost at no level** (HarmBench templates 0.30 vs 0.30, prefill 0.31 vs 0.31; identical safety-depth curve). M3 RepNoise collapsed the model (guard-flagged). Both are honest negatives.
+- **C2 best-of-N:** synthetic noise (en) scales steeply (b=−1.93); natural Hinglish respelling is flat (b≈0) -- the power law is an adversarial-noise effect.
+- **C3 / H4 (the bet, positive, and it generalizes):** refusal margin predicts cost-to-break, Cox HR 0.72 (BoN, p=0.003) / 0.60 (templates, p=2×10⁻⁶). **Leave-one-model-out:** Global HR 0.67, pooled 0.64 [0.56, 0.73], p=2×10⁻¹¹ -- the predictor works on a model it was not tuned on (`scripts/h4_lomo.py`).
+- **Hardening:** M2 RR (`fire_rr`) trained and re-attacked paired vs vendor Fire -- **raises attacker cost at no level** (HarmBench templates 0.30 vs 0.30, prefill 0.31 vs 0.31; identical safety-depth curve). M3 RepNoise collapsed the model (guard-flagged). Both are honest negatives.
 - **Data v2 Aya parallel core:** 1200 records (400 en/hing/hi-Deva), on HF as `shahanxd/magpie-core-v1` (the repo name predates v2; it holds the v2 Aya core) and on Kaggle as `shahanxd/magpie-core-v2`, with a native-review sheet.
 - **Submission artifacts:** hero figure (all-HarmBench), the HF **article** (`docs/ARTICLE.md`), per-model **robustness cards** (`docs/cards/`), a self-contained **HF Space** (`space/`), **`make reproduce-core`** + `docs/REPRODUCE.md`, **C5 upstream patches** (`contrib/`), and a plain **human-steps guide** (`docs/HUMAN_STEPS.md`).
 
-**Remaining — human-only (see `docs/HUMAN_STEPS.md`):** publish to HF (article, collections, deploy the Space, optionally the hardened `fire_rr`); open the C5 PRs from the prepared `contrib/` patches; native-speaker review of the sheet; the organizer Discord ticket; the 3050 GGUF laptop demo. **Blocked science:** the en-vs-Hinglish H4 margin check — the model collapses on Hinglish, so there are too few break events for a well-powered Cox (itself a finding).
+**Remaining -- human-only (see `docs/HUMAN_STEPS.md`):** publish to HF (article, collections, deploy the Space, optionally the hardened `fire_rr`); open the C5 PRs from the prepared `contrib/` patches; native-speaker review of the sheet; the organizer Discord ticket; the 3050 GGUF laptop demo. **Blocked science:** the en-vs-Hinglish H4 margin check -- the model collapses on Hinglish, so there are too few break events for a well-powered Cox (itself a finding).
 
 **Known environment facts for GPU jobs:** the vLLM venv on Kaggle must also carry `accelerate`, `datasets`, `curatorkit`, `sentencepiece`, `tiktoken` (now installed by `install_vllm_venv`); release vLLM between models with `VLLMBackend.close()`; attach a Kaggle model source with its version (`.../8b/5`); Aya Expanse (`cohereforai/aya-expanse`) is gated on Kaggle and needs manual licence acceptance before it will mount.
 

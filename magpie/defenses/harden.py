@@ -57,7 +57,7 @@ def scaled_layers(n_layers: int, reference: Sequence[int] = (10, 20), ref_depth:
 
 
 # ---------------------------------------------------------------------------
-# M3 — RepNoise (SafeTune trainer, unchanged)
+# M3 -- RepNoise (SafeTune trainer, unchanged)
 # ---------------------------------------------------------------------------
 
 
@@ -84,7 +84,7 @@ def train_repnoise(model: Any, tokenizer: Any, out_dir: str | Path, *,
 
 
 # ---------------------------------------------------------------------------
-# M2 — Circuit Breakers / Representation Rerouting (LoRA loop around SafeTune's loss)
+# M2 -- Circuit Breakers / Representation Rerouting (LoRA loop around SafeTune's loss)
 # ---------------------------------------------------------------------------
 
 

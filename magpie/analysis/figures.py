@@ -1,7 +1,7 @@
 """Figures: the attacker-cost ladder (the hero figure) and the BoN / depth curves.
 
-Reads the committed result tables and draws the C1 story — validated ASR as the
-attacker climbs the ladder (L0 → L1 → L2 → L3), per model — plus the best-of-N
+Reads the committed result tables and draws the C1 story -- validated ASR as the
+attacker climbs the ladder (L0 → L1 → L2 → L3), per model -- plus the best-of-N
 power law and the prefill safety-depth curve. matplotlib only (the ``analysis``
 extra); headless Agg backend so it runs in CI and in a kernel.
 """
@@ -42,7 +42,7 @@ def load_table(path: str | Path) -> list[LadderPoint]:
 
 
 def plot_cost_ladder(points: list[LadderPoint], out_png: str | Path,
-                     title: str = "Magpie — attacker-cost ladder (Tiny Aya, English)") -> Path:
+                     title: str = "Magpie -- attacker-cost ladder (Tiny Aya, English)") -> Path:
     """Draw ASR vs attacker level, one line per model, with CI bars."""
     import matplotlib
 

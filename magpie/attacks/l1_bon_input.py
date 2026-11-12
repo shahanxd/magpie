@@ -1,15 +1,15 @@
-"""L1c — best-of-N on the input (PLAN §6), the home of contribution C2.
+"""L1c -- best-of-N on the input (PLAN §6), the home of contribution C2.
 
 Three augmentation *sources*, one attack, so the survival/power-law analysis is
 identical across them and the only thing that changes is the distribution the
 variants are drawn from:
 
-* ``synthetic`` — the Hughes et al. augmentations (random caps, ASCII noise,
+* ``synthetic`` -- the Hughes et al. augmentations (random caps, ASCII noise,
   word scramble). The must-beat baseline.
-* ``natural`` — the natural-Hinglish augmenter: spellings, transliteration,
+* ``natural`` -- the natural-Hinglish augmenter: spellings, transliteration,
   SMS shorthand and code-mix shifts that real users type. H2's hypothesis is
   that this reaches a given ASR in fewer samples (a larger power-law exponent).
-* ``devanagari`` — the script control: on Devanagari, synthetic augmentations
+* ``devanagari`` -- the script control: on Devanagari, synthetic augmentations
   are mostly inert (random capitalisation changes nothing, ASCII noise only
   touches spaces), which is the verified SafeTune tool gap.
 

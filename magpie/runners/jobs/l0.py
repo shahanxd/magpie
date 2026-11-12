@@ -1,11 +1,11 @@
-"""L0 + over-refusal on Fire and Global — the first table (PLAN §6 L0, D1 gate).
+"""L0 + over-refusal on Fire and Global -- the first table (PLAN §6 L0, D1 gate).
 
 Runs inside a Kaggle T4 kernel. Loads the harmful parallel core (HarmBench
 standard + StrongREJECT, stratified) and the over-refusal set (XSTest-safe +
 OR-Bench-Hard), then for each target model generates L0 (greedy + one sampled)
 on every prompt, judges with the multilingual refusal matcher, and writes the
 L0 table: ASR with a Wilson CI and median cost-to-break, paired with the
-benign over-refusal rate and a collapse rate — the "every number next to
+benign over-refusal rate and a collapse rate -- the "every number next to
 over-refusal" rule.
 
 The judge here is the fast lexical pre-filter (`refusal_lexicon`); the model
@@ -99,7 +99,7 @@ def _build_generator(model_key: str, backend_kind: str = "vllm",
 
     # A named checkpoint path (e.g. a hardened model) wins over the registry key.
     model_dir = (model_dirs or {}).get(model_key) or find_model_dir(model_key)
-    # vLLM when available (in the venv), else HF transformers — load_backend falls back.
+    # vLLM when available (in the venv), else HF transformers -- load_backend falls back.
     # max_model_len is a vLLM-only knob; the HF backend does not take it.
     kwargs = {"dtype": "float16"}
     if backend_kind == "vllm":

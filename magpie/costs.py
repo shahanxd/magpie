@@ -1,4 +1,4 @@
-"""The attacker-cost model — the x-axis of every Magpie survival curve.
+"""The attacker-cost model -- the x-axis of every Magpie survival curve.
 
 Magpie's thesis is that refusal rate is the wrong safety number for an
 open-weight on-device model: what matters is *how much effort* it takes to
@@ -8,15 +8,15 @@ input-space attacks (prompting, best-of-N) and weight-space attacks
 
 Three cost currencies, logged for every attempt:
 
-* **FLOPs** — the primary axis. Using the standard transformer approximation
+* **FLOPs** -- the primary axis. Using the standard transformer approximation
   (Kaplan et al. 2020; Hoffmann et al. 2022):
 
       forward pass      ≈ 2 · P · tokens
       training step     ≈ 6 · P · tokens      (forward + backward)
 
   with ``P`` the parameter count. ``P = 3.35e9`` for Tiny Aya Fire.
-* **queries** — black-box API calls, the currency an L1 attacker actually pays.
-* **wall-clock seconds** — on named reference hardware (a Kaggle T4, the team's
+* **queries** -- black-box API calls, the currency an L1 attacker actually pays.
+* **wall-clock seconds** -- on named reference hardware (a Kaggle T4, the team's
   RTX 3050 laptop), derived from measured throughput so the "minutes on a
   gaming laptop" story is concrete.
 
@@ -185,7 +185,7 @@ class CostModel:
     # -- forward / generation -------------------------------------------------
 
     def forward_flops(self, tokens: float) -> float:
-        """2 · P · tokens — one forward pass over ``tokens`` tokens."""
+        """2 · P · tokens -- one forward pass over ``tokens`` tokens."""
         return 2.0 * self.P * float(tokens)
 
     def generation(
@@ -216,7 +216,7 @@ class CostModel:
     # -- training (L3) --------------------------------------------------------
 
     def train_step_flops(self, tokens: float) -> float:
-        """6 · P · tokens — one forward+backward step over ``tokens`` tokens."""
+        """6 · P · tokens -- one forward+backward step over ``tokens`` tokens."""
         return 6.0 * self.P * float(tokens)
 
     def finetune(

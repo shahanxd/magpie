@@ -2,7 +2,7 @@
 
 **Robustness, priced as attacker cost.** Magpie measures how much effort it takes to break a
 hardened, on-device multilingual model, Cohere **Tiny Aya Fire** (3.35B). It measures in
-English and in **Hinglish**, the romanized, code-mixed Hindi–English that hundreds of millions
+English and in **Hinglish**, the romanized, code-mixed Hindi-English that hundreds of millions
 of people actually type. Every number is reported next to **over-refusal**. Magpie then tests
 whether cheap white-box measurements *predict* that price before any attack is run.
 
@@ -20,7 +20,7 @@ Full plan: [`docs/PLAN.md`](docs/PLAN.md) · decisions and conventions: [`docs/C
   an RTX 3050 laptop). Input-space and weight-space attacks land on the same x-axis.
   This lives in [`magpie/costs.py`](magpie/costs.py).
 - **Survival analysis.** A prompt survives until a judge marks a *valid* success; unbroken
-  prompts are censored. Outputs are Kaplan–Meier curves of P(still refused) against log-FLOPs,
+  prompts are censored. Outputs are Kaplan-Meier curves of P(still refused) against log-FLOPs,
   median cost-to-break with bootstrap CIs, and a Cox regression with white-box covariates.
 - **Attacker ladder.** L0 natural → L1 black-box → L2 white-box input → L3 weight edits. Every
   attack implements one interface ([`magpie/attacks/base.py`](magpie/attacks/base.py)), so cost
@@ -36,13 +36,13 @@ magpie/
   types.py    Attempt / Outcome / PromptRecord schema
   config.py   run configs, seeding, provenance (git SHA + config hash)
   serve/      vLLM / HF transformers / echo behind one generate()
-  attacks/    Attack interface + runner (L0–L3 attacks land here)
+  attacks/    Attack interface + runner (L0-L3 attacks land here)
   data/       dataset builders, Hinglish tools (variants, CMI), loaders
   judges/     refusal lexicon, local judges, translate-then-judge, calibration
   mech/       refusal margins, safety depth, refusal rank, circuits
   analysis/   survival curves, Cox models, BoN power laws, figures
   runners/    Kaggle GPU kernels, HF Hub publishing
-  defenses/   SafeTune hardening configs (M2–M6)
+  defenses/   SafeTune hardening configs (M2-M6)
 configs/  notebooks/  space/  tests/  docs/
 ```
 

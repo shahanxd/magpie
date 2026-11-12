@@ -3,7 +3,7 @@
 **Hackathon:** Lexsi AI Safety & Alignment Hackathon, Track 2a.
 **Problem statement:** *Red-teaming and robustness evaluation.* Attack a hardened model with jailbreaks, prompt injection, encoding tricks, best-of-N sampling and weight-space attacks such as abliteration, and report robustness alongside over-refusal.
 **Model:** Cohere Tiny Aya **Fire** (3.35B, the South-Asia variant) as the main target, with Tiny Aya Global for comparison.
-**Languages:** **English + Hinglish** (romanized, code-mixed Hindi–English), plus Devanagari Hindi as a small *script control*.
+**Languages:** **English + Hinglish** (romanized, code-mixed Hindi-English), plus Devanagari Hindi as a small *script control*.
 **Budget:** **$0.** Free tiers only.
 **Deadlines:** registration Nov 5 · submission Nov 14 (end of day, Anywhere on Earth) · shortlist Nov 16 · Demo Day Nov 22 (we present online).
 **Status:** v2 for approval. Nothing below has been run yet; all results are hypotheses.
@@ -45,7 +45,7 @@
 
 ### 1.1 How judging works (kickoff slides)
 - Scoring is double-blind by multiple judges, normalized: **Write-up clarity /10 · Practical usefulness /10 · Code/notebook quality /10 · Overall /100.**
-- The top 10–20 teams go to Demo Day. Prizes are ranked across all tracks.
+- The top 10-20 teams go to Demo Day. Prizes are ranked across all tracks.
 - An internal team checks validity first and tags each submission to a sub-track.
 
 ### 1.2 What the Lexsi safety team rewards (their Sept/Oct 2026 posts)
@@ -103,7 +103,7 @@ On-device means the weights are public. Each level is a superset of the one befo
 - **wall-clock** on reference hardware: a Kaggle T4, and the team's **RTX 3050 4GB laptop** ("minutes on a gaming laptop")
 
 **Statistics: survival analysis.** A prompt survives until it is broken; prompts not broken within budget are censored. We report:
-- Kaplan–Meier curves of P(still refused) against log-FLOPs
+- Kaplan-Meier curves of P(still refused) against log-FLOPs
 - median survival cost with bootstrap CIs
 - log-rank tests
 - **Cox regression** with white-box covariates (for H4)
@@ -121,15 +121,15 @@ On-device means the weights are public. Each level is a superset of the one befo
 |---|---|---|---|---|
 | M0 | `CohereLabs/tiny-aya-fire` | vendor safety training + merging | 0 | full |
 | M1 | `CohereLabs/tiny-aya-global` | vendor (the "safest" Tiny Aya per its tech report) | 0 | L0, L1, L2 prefill, L3 abliteration |
-| M2 | M0 + **Circuit Breakers / RR** (`CircuitBreakerTrainer`, Faithful) | train-time representation rerouting | ~2–3 T4-h | full |
-| M3 | M0 + **RepNoise** (`RepNoiseTrainer`, Faithful) | tamper resistance (against harmful fine-tuning) | ~2–3 T4-h | full |
-| M4 *(plus tier)* | M0 + **RepBend** (Faithful) or DeepRefusal (Variant; must not be cited as the paper's method) | robustness to abliteration and prefill | ~2–3 T4-h | full |
-| M5 | M0 + **CAST** conditional steering (Faithful) | inference-time; no training | 0 | L0–L1 (we show it is void at L2+) |
-| M6 *(Nov 16–21)* | M2 retrained with **Hinglish** hardening data (CuratorKIT) | closes the loop | ~3 T4-h | full + **adaptive** re-attack |
+| M2 | M0 + **Circuit Breakers / RR** (`CircuitBreakerTrainer`, Faithful) | train-time representation rerouting | ~2-3 T4-h | full |
+| M3 | M0 + **RepNoise** (`RepNoiseTrainer`, Faithful) | tamper resistance (against harmful fine-tuning) | ~2-3 T4-h | full |
+| M4 *(plus tier)* | M0 + **RepBend** (Faithful) or DeepRefusal (Variant; must not be cited as the paper's method) | robustness to abliteration and prefill | ~2-3 T4-h | full |
+| M5 | M0 + **CAST** conditional steering (Faithful) | inference-time; no training | 0 | L0-L1 (we show it is void at L2+) |
+| M6 *(Nov 16-21)* | M2 retrained with **Hinglish** hardening data (CuratorKIT) | closes the loop | ~3 T4-h | full + **adaptive** re-attack |
 
 **Why Fire:** it is the variant an Indian deployer would pick ("best for South Asian languages"). Its weakest-language MultiJail safety is 78.1%, against 87.0% for Global (Tiny Aya tech report).
 
-**Natural experiment:** SafeTune defenses ship with English hardening data, so M2–M4 test whether English-trained hardening protects Hinglish under attack (H1).
+**Natural experiment:** SafeTune defenses ship with English hardening data, so M2-M4 test whether English-trained hardening protects Hinglish under attack (H1).
 
 **Tiny Aya quirks** (from SafeTune docs and tests):
 - the chat template adds a ~366-token preamble, so leave `max_len` unset or ≥512
@@ -161,7 +161,7 @@ Urdu, Arabic, Roman Urdu and Arabizi are left for later. The pipeline is languag
 | Over-refusal | XSTest safe prompts (CC-BY-4.0) + OR-Bench-Hard-1k subset + a **benign twin** of every harmful seed | ~450 × en/hing | over-refusal next to every number |
 | Utility | Global-MMLU-Lite (en, hi; Apache-2.0) + a ~150-item Hinglish helpfulness set | ~350 | utility cost of hardening |
 | Prompt injection | ~100 documents (Wikipedia/news, CC-BY-SA; English and Hinglish WhatsApp-forward-style), injected instructions in en/hing × 3 positions × 3 visibilities, plus canaries | ~1.8k cases | judge-free injection scoring |
-| Fine-tune attack data | BeaverTails harmful subset (CC-BY-NC) in en + Hinglish | 10–500 | L3 steps-to-break |
+| Fine-tune attack data | BeaverTails harmful subset (CC-BY-NC) in en + Hinglish | 10-500 | L3 steps-to-break |
 
 ### 5.3 How the data is built (free)
 - **Translation and Hinglish generation:** LLM-assisted translation (Claude) of the seed sets into Hinglish (natural code-mixing, several spelling styles) and Devanagari, then native-speaker verification. The dataset card names the LLM used.
@@ -187,7 +187,7 @@ Urdu, Arabic, Roman Urdu and Arabizi are left for later. The pipeline is languag
 - base64, ROT13, leetspeak, reversed text
 - Hinglish-specific: script swap (Hinglish ↔ Devanagari), mid-sentence script mixing
 
-**L1c, BoN on the input** (N ≤ 128–256, early-stopped; fit `−log ASR(N) = a·N^(−b)` and extrapolate to 10k with CIs):
+**L1c, BoN on the input** (N ≤ 128-256, early-stopped; fit `−log ASR(N) = a·N^(−b)` and extrapolate to 10k with CIs):
 - (i) the SafeTune defaults (synthetic noise)
 - (ii) **natural Hinglish variation**:
   - spelling variants from a variant lexicon (LLM-drafted, team-verified)
@@ -323,9 +323,9 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 - **Colab:** free accounts as overflow.
 - **SageMaker:** if it comes through, for crunch days (free Studio Lab is manual-only).
 - **Hackathon HF credits** ($20, free to us) for the Space.
-- **RTX 3050 4GB laptop:** GGUF Q4 runs (Tiny Aya Q4 ≈ 2–3 GB), "attacker on a laptop" timings, and the live Demo Day demo.
+- **RTX 3050 4GB laptop:** GGUF Q4 runs (Tiny Aya Q4 ≈ 2-3 GB), "attacker on a laptop" timings, and the live Demo Day demo.
 
-**Estimate:** ≈ **30–35 T4-hours** for the core tier (fewer forms than v1). That is about two Kaggle accounts for one week.
+**Estimate:** ≈ **30-35 T4-hours** for the core tier (fewer forms than v1). That is about two Kaggle accounts for one week.
 
 **Automated loop (verified: our dev environment can reach kaggle.com, huggingface.co, PyPI, Groq):**
 1. Code and CPU tests run in the dev environment and CI; changes go to GitHub.
@@ -334,7 +334,7 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 
 **Manual steps:**
 - add the secrets below (once)
-- native-language checks and the annotation sprint (~2–3 h each)
+- native-language checks and the annotation sprint (~2-3 h each)
 - Colab "Run all" if Kaggle quota runs out
 - the 3050 laptop runs
 - registration, Discord, gated-model acceptance
@@ -361,17 +361,17 @@ configs/  notebooks/  space/  tests/ (CPU tests, tiny random cohere2 config)  do
 | D1 | Nov 5 | Seed selection; LLM-assisted Hinglish/Devanagari translations; CuratorKIT gates; team spot-checks; Kaggle runner works end to end; L0 + over-refusal on M0/M1; **commit PREREGISTRATION.md** | L0 table |
 | D2 | Nov 6 | Launch hardening M2/M3(/M4) on Kaggle; L1a/b; judge pipeline + refusal lexicon; Hinglish variant lexicon + augmenters + tests | hardening running; judges live |
 | D3 | Nov 7 | BoN (synthetic vs natural; decoding) on M0; prefill depth; refusal margins; build injection suite | first power-law fits |
-| D4 | Nov 8 | L0–L2 on M2–M5; abliteration on all; injection runs; GGUF on the 3050 | L0–L2 complete |
+| D4 | Nov 8 | L0-L2 on M2-M5; abliteration on all; injection runs; GGUF on the 3050 | L0-L2 complete |
 | D5 | Nov 9 | L3 fine-tune steps-to-break; embedding subset; adaptive attacks; CircuitKIT circuits | L3 complete |
 | D6 | Nov 10 | **Annotation sprint**; judge study; re-score; Cox/ρ analysis | κ; H4 result |
 | D7 | Nov 11 | Figures, robustness cards, HF collections; upstream PRs | figures v1 |
 | D8 | Nov 12 | HF article, Space, ROI; **submit v1 (safety net)** | valid submission on file |
 | D9 | Nov 13 | Polish; **fresh-environment reproduction**; checklist audit | final review |
 | D10 | Nov 14 | **Final submission early in the day** | done |
-| — | Nov 16–21 (if shortlisted, +$200 HF credits) | M6 Hinglish hardening + adaptive re-attack; native-written Hinglish red-team set; BoN to 10k; Demo Day rehearsal (online) | thesis proved |
+| -- | Nov 16-21 (if shortlisted, +$200 HF credits) | M6 Hinglish hardening + adaptive re-attack; native-written Hinglish red-team set; BoN to 10k; Demo Day rehearsal (online) | thesis proved |
 
 **Scope tiers:**
-- **Core:** M0–M3, M5 · en + hing (+hi-Deva on the core subset) · L0, L1a–d, L1f, L2a, L3a–c · margin/depth/rank · J1 + J2 + gold set.
+- **Core:** M0-M3, M5 · en + hing (+hi-Deva on the core subset) · L0, L1a-d, L1f, L2a, L3a-c · margin/depth/rank · J1 + J2 + gold set.
 - **Plus:** M4 · PAIR-lite · L2b/c · CircuitKIT circuits · native Hinglish red-team set.
 - **Stretch:** M6 · Aya Expanse 8B replication · multi-turn · Urdu/Arabic.
 
@@ -414,7 +414,7 @@ Each module has an owner, who also authors its commits:
 
 | Risk | Fallback |
 |---|---|
-| Fire refuses almost everything at L0–L1 | The cost metric still separates models; L2/L3 always break; natural BoN is where any surprise would show |
+| Fire refuses almost everything at L0-L1 | The cost metric still separates models; L2/L3 always break; natural BoN is where any surprise would show |
 | A SafeTune defense won't train on Tiny Aya | Keep M0, M1, M5 + one defense; file the issue upstream (feedback is a stated goal) |
 | Local judges are weak on Hinglish | Translate-then-judge, the gold set and calibration (this becomes C4) |
 | Kaggle quota runs out | More accounts → Colab → SageMaker; cut plus tier first |

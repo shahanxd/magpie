@@ -5,7 +5,7 @@ Joins each model's per-prompt refusal margin (fit on a disjoint contrast set, no
 attack) with its L1-templates break depths, fits a Cox model per model, and a
 pooled model. If the margin's hazard ratio is < 1 and consistent across models
 (and pooled), the white-box predictor generalizes beyond the model it was tuned
-on — the pre-registered leave-one-model-out check.
+on -- the pre-registered leave-one-model-out check.
 
     python scripts/h4_lomo.py
 """

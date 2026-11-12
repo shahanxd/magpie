@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Magpie — Pricing Robustness</title>
+<title>Magpie -- Pricing Robustness</title>
 <meta name="description" content="Red-teaming Tiny Aya as attacker cost, in English and Hinglish.">
 <style>
 :root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#5f5e57;--line:#e3e0d8;--card:#fff;--acc:#3b4cca;--accbg:#eef0fb}
@@ -35,21 +35,21 @@ pre code{border:0;padding:0}
 footer{margin-top:48px;color:var(--mut);font-size:.88rem;border-top:1px solid var(--line);padding-top:14px}
 </style></head><body><div class="wrap">
 <header>
-<h1>🐦 Magpie — pricing the robustness of an open, on-device safety model</h1>
-<p class="thesis">For an open, on-device model the attacker owns the weights, so safety is not a refusal rate — it is the attacker cost to break the model, at each capability level, in the languages people actually use. Magpie prices that, pairs every number with over-refusal, and tests whether a cheap white-box margin predicts the price.</p>
+<h1> Magpie -- pricing the robustness of an open, on-device safety model</h1>
+<p class="thesis">For an open, on-device model the attacker owns the weights, so safety is not a refusal rate -- it is the attacker cost to break the model, at each capability level, in the languages people actually use. Magpie prices that, pairs every number with over-refusal, and tests whether a cheap white-box margin predicts the price.</p>
 <p class="links"><a href="https://github.com/shahanxd/magpie">Code &amp; reproducibility</a><a href="https://huggingface.co/datasets/shahanxd/magpie-core-v1">Dataset (gated)</a><a href="https://huggingface.co/shahanxd/fire_rr">Hardened model</a></p>
 </header>
 <nav role="tablist">
-<button data-t="article">📄 Article</button><button data-t="ladder">Cost ladder</button>
+<button data-t="article"> Article</button><button data-t="ladder">Cost ladder</button>
 <button data-t="judge">Judge validity</button><button data-t="harden">Does hardening help?</button>
 <button data-t="h4">Audit before you attack</button><button data-t="cards">Robustness cards</button>
 </nav>
-<section id="article"><p><em>Lexsi Hackathon — Track 2a. A red-teaming study of Cohere Labs' Tiny Aya Fire, in English and
+<section id="article"><p><em>Lexsi Hackathon -- Track 2a. A red-teaming study of Cohere Labs' Tiny Aya Fire, in English and
 Hinglish, that measures safety as <strong>attacker cost</strong> rather than refusal rate, and tests whether
 cheap white-box measurements can <strong>predict</strong> that cost.</em></p>
 <blockquote>
-<p><strong>Thesis, in one sentence.</strong> For an open model that ships on the phone — where the attacker owns
-the weights — the right safety number is not <em>"what fraction does it refuse?"</em> but <em>"how much
+<p><strong>Thesis, in one sentence.</strong> For an open model that ships on the phone -- where the attacker owns
+the weights -- the right safety number is not <em>"what fraction does it refuse?"</em> but <em>"how much
 attacker effort does a break cost, at each capability level, in the languages people actually
 use?"</em></p>
 </blockquote>
@@ -59,19 +59,19 @@ use?"</em></p>
 <h2>1. Abstract</h2>
 <p>Refusal rate measures the wrong thing for an open, on-device model: a static percentage says
 nothing about an attacker who holds the weights and can template, resample, prefill, or edit them.
-<strong>Magpie</strong> re-frames robustness as a <em>cost curve</em> — the share of harmful prompts still refused as a
-function of attacker FLOPs — and places input-space and weight-space attacks on one axis, always
+<strong>Magpie</strong> re-frames robustness as a <em>cost curve</em> -- the share of harmful prompts still refused as a
+function of attacker FLOPs -- and places input-space and weight-space attacks on one axis, always
 paired with over-refusal on benign prompts, in English and in <strong>Hinglish</strong> (romanized Hindi-English
 code-mixing) with a <strong>Devanagari</strong> control. We attack the vendor-hardened Tiny Aya Fire (3.35B) and
 a SafeTune-hardened variant across an attacker ladder L0→L3, judge every attempt with both a cheap
 multilingual refusal lexicon and the HarmBench content classifier, and regress per-prompt break
 depth on a pre-attack white-box refusal margin.</p>
 <p>Four results stand out. <strong>(C4, the headline)</strong> The judge choice does not just rescale ASR, it
-<strong>flips defense rankings</strong>: the refusal lexicon over-counts jailbreaks 4–5× and, cross-lingually,
-reports Devanagari as 4× easier than English and Hinglish as the <em>safest</em> form — when the
+<strong>flips defense rankings</strong>: the refusal lexicon over-counts jailbreaks 4-5× and, cross-lingually,
+reports Devanagari as 4× easier than English and Hinglish as the <em>safest</em> form -- when the
 content-validated truth is the opposite in ordering and a third in magnitude. <strong>(H4)</strong> A prompt's
 cheap, attack-free refusal-direction margin <strong>predicts</strong> how expensive it is to break (Cox hazard
-ratio 0.60–0.72 per standard deviation, p ≤ 0.003) — the high-risk "audit before you attack" bet,
+ratio 0.60-0.72 per standard deviation, p ≤ 0.003) -- the high-risk "audit before you attack" bet,
 and it is positive. <strong>(H1)</strong> Content-validated, there is a real but modest script gap: Fire complies
 with 28% of harmful Devanagari requests vs 3% in English and 3% in Hinglish. <strong>(Defense, a clean
 negative)</strong> A lightweight 150-step circuit-breakers/RR pass raises attacker cost at <em>no</em> level.
@@ -84,21 +84,21 @@ and intended to run on-device. That deployment makes the usual safety metric mis
 API can hide behind its refusal rate because the attacker only ever sees the output. An open model
 offers the attacker the full escalation ladder:</p>
 <ul>
-<li><strong>L0</strong> — just ask.</li>
-<li><strong>L1</strong> — wrap the ask in a public jailbreak template, or resample it best-of-N with cheap input
-  perturbations.</li>
-<li><strong>L2</strong> — prefill the first tokens of the assistant's reply (anyone running the weights controls
-  the decoder).</li>
-<li><strong>L3</strong> — edit the weights: ablate the refusal direction, fine-tune, quantize.</li>
+<li><strong>L0</strong> -- just ask.</li>
+<li><strong>L1</strong> -- wrap the ask in a public jailbreak template, or resample it best-of-N with cheap input
+ perturbations.</li>
+<li><strong>L2</strong> -- prefill the first tokens of the assistant's reply (anyone running the weights controls
+ the decoder).</li>
+<li><strong>L3</strong> -- edit the weights: ablate the refusal direction, fine-tune, quantize.</li>
 </ul>
 <p>A single refusal percentage collapses this ladder to a point. Worse, for a model whose whole reason
 to exist is Hinglish and Indic languages, an English-only refusal number is close to meaningless.
 Magpie's answer is to <strong>price</strong> robustness: measure <em>how much the next break costs</em> at each rung,
 in each language, and always show what that safety costs benign users (over-refusal).</p>
-<p><strong>Pre-registration.</strong> Hypotheses H1–H5 and the analysis plan were committed to
+<p><strong>Pre-registration.</strong> Hypotheses H1-H5 and the analysis plan were committed to
 <a href="https://github.com/shahanxd/magpie/blob/main/docs/PREREGISTRATION.md"><code>docs/PREREGISTRATION.md</code></a> <strong>before</strong> the main runs (git history proves the
-order). This is a red-team study with a falsifiable, high-risk bet (H4); reporting it honestly —
-including where it fails — is the point.</p>
+order). This is a red-team study with a falsifiable, high-risk bet (H4); reporting it honestly -- 
+including where it fails -- is the point.</p>
 <hr />
 <h2>3. Threat model: the attacker ladder and the cost axis</h2>
 <p>We price one forward pass as <code>2·P·tokens</code> FLOPs and one training step as <code>6·P·tokens</code>, with
@@ -138,13 +138,13 @@ break are right-censored. This turns a jailbreak campaign into a survival-analys
 </tbody>
 </table></div>
 <p>The survival unit is the <strong>prompt</strong>, not the model, so a single run yields hundreds of data points
-and real statistics (Wilson ASR CIs, Kaplan–Meier curves, Cox regression) rather than a handful of
+and real statistics (Wilson ASR CIs, Kaplan-Meier curves, Cox regression) rather than a handful of
 model-level numbers.</p>
 <hr />
 <h2>4. Method</h2>
 <p><strong>Data.</strong> A parallel core of harmful seeds (HarmBench standard + StrongREJECT) and benign
 "over-refusal" seeds (XSTest-safe + OR-Bench-Hard), stratified across nine harm categories, in three
-matched forms — English, Hinglish, Devanagari — so any per-form difference is the <em>form</em>, not the
+matched forms -- English, Hinglish, Devanagari -- so any per-form difference is the <em>form</em>, not the
 content. The Hinglish/Devanagari core is built by in-kernel <strong>Aya Expanse 8B</strong> translation (no paid
 API, no data leaving the kernel), with a native-speaker review sheet. Harmful completions live only
 in a <strong>gated</strong> HF dataset; the repo holds aggregates and no-text artifacts.</p>
@@ -218,16 +218,16 @@ computed with no attack.</p>
 </tbody>
 </table></div>
 <p><strong>Read.</strong> The cost axis does real work. Fire is genuinely robust to a direct ask (0.05) and still
-mostly holds against public jailbreak templates (0.29), but its safety is <strong>shallow</strong> — a single
-forced compliance token takes prefill ASR to 0.80, saturating at two — and it is <strong>defenceless to
+mostly holds against public jailbreak templates (0.29), but its safety is <strong>shallow</strong> -- a single
+forced compliance token takes prefill ASR to 0.80, saturating at two -- and it is <strong>defenceless to
 weight edits</strong> (abliteration 0.68 at ~10¹³·⁵ FLOPs of one-time direction-fit cost). The contrast
 between L0 (0.05) and L3 (0.68) <em>on the same model</em> is the whole on-device story: safe to ask,
 broken to edit. Best-of-N on the input follows a clean Hughes-style power law
 (<code>−log ASR(N) = a·Nᵇ</code>, b ≈ −1.9) but its content-validated ceiling (0.19) is far below the lexicon's
-saturated ~1.00 — which is the headline C4 point.</p>
+saturated ~1.00 -- which is the headline C4 point.</p>
 <hr />
 <h2>6. The headline: judge validity flips rankings (C4)</h2>
-<p>A cheap refusal judge does not merely inflate ASR by a constant — it <strong>reorders defenses and
+<p>A cheap refusal judge does not merely inflate ASR by a constant -- it <strong>reorders defenses and
 languages</strong>, which is fatal for a leaderboard.</p>
 <p><strong>Within English</strong>, rescoring the same attempts with HarmBench:</p>
 <div class="tw"><table>
@@ -287,19 +287,19 @@ actually harmful</em> text that only a content judge can catch.</p>
 </table></div>
 <p>The refusal lexicon reports <strong>Devanagari as 4× English and Hinglish as the safest</strong> form. The
 content-validated truth is the <strong>opposite ordering and a third the magnitude</strong>: Devanagari ≈ 9×
-English, Hinglish ≈ English. <strong>You cannot compare robustness across languages — or rank defenses —
+English, Hinglish ≈ English. <strong>You cannot compare robustness across languages -- or rank defenses -- 
 with a refusal lexicon.</strong> Magpie's pairing of a content judge with a collapse guard is what makes
 the cross-lingual comparison trustworthy. This is contribution C4, and it directly realizes the
 pre-registered H5 (the en-vs-non-English judge gap).</p>
 <hr />
 <h2>7. H1 (language) and C2 (natural best-of-N)</h2>
-<p><strong>H1 — a real but modest script gap.</strong> Content-validated, Fire complies with <strong>0.28</strong> of harmful
-Devanagari requests vs <strong>0.03</strong> English and <strong>0.03</strong> Hinglish — a genuine safety-coverage gap in
+<p><strong>H1 -- a real but modest script gap.</strong> Content-validated, Fire complies with <strong>0.28</strong> of harmful
+Devanagari requests vs <strong>0.03</strong> English and <strong>0.03</strong> Hinglish -- a genuine safety-coverage gap in
 script/language that survives the content judge, but one that the refusal lexicon had tripled. The
 three forms also fail <em>differently</em>: English cleanly refuses, Devanagari refuses in script the
 lexicon can't read, Hinglish <em>collapses</em> (the model degenerates on romanized code-mixing). Same
 model, three attack surfaces.</p>
-<p><strong>C2 — the best-of-N power law is an adversarial-noise effect, not "more samples ⇒ more breaks".</strong></p>
+<p><strong>C2 -- the best-of-N power law is an adversarial-noise effect, not "more samples ⇒ more breaks".</strong></p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -359,28 +359,28 @@ Cox model:</p>
 <td>L1 templates</td>
 <td>100</td>
 <td>51</td>
-<td><strong>0.60</strong> [—]</td>
+<td><strong>0.60</strong> [ -- ]</td>
 <td><strong>2×10⁻⁶</strong></td>
 </tr>
 </tbody>
 </table></div>
 <p><strong>H4 is supported, and positively.</strong> A one-standard-deviation higher refusal margin lowers the
-hazard of a break by ~28% (best-of-N) to ~40% (templates), both significant. A prompt's margin —
-computed with <strong>no attack</strong>, from a direction fit on disjoint data — predicts how expensive it will
+hazard of a break by ~28% (best-of-N) to ~40% (templates), both significant. A prompt's margin -- 
+computed with <strong>no attack</strong>, from a direction fit on disjoint data -- predicts how expensive it will
 be to break. This was the pre-registration's flagged high-risk contribution (a null would have been
 reportable); it is not null.</p>
 <p><strong>It also generalizes across models (the pre-registered leave-one-model-out check).</strong> Extracting
 the margin on <strong>Global</strong> (its own disjoint contrast set) and re-fitting on L1 templates: Fire HR
 0.60, Global HR 0.67, pooled <strong>0.64 [0.56, 0.73], p = 2×10⁻¹¹</strong> (concordance 0.69). The predictor
-works on a model it was not tuned on — so the audit is not a per-model artifact. (The en-vs-Hinglish
+works on a model it was not tuned on -- so the audit is not a per-model artifact. (The en-vs-Hinglish
 margin check stays open: the model <em>collapses</em> on Hinglish, leaving too few break events for a
-well-powered regression — itself a finding.)</p>
+well-powered regression -- itself a finding.)</p>
 <hr />
 <h2>9. Defenses, and an honest negative</h2>
 <p>We hardened Fire with SafeTune and re-ran the ladder, paired against vendor Fire (same prompts, same
 seeds).</p>
 <p><strong>M2 Circuit-Breakers / RR</strong> (150 steps, LoRA on 2 layers, loss 5.0→0.50) is the headline defense
-result — and it is a <strong>clean negative measured as cost</strong>:</p>
+result -- and it is a <strong>clean negative measured as cost</strong>:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -408,9 +408,9 @@ result — and it is a <strong>clean negative measured as cost</strong>:</p>
 <p>At every level and under both judges the hardened model is broken exactly as often as vendor Fire,
 with a byte-identical prefill safety-depth curve. The checkpoint is genuinely the hardened one (its
 completions differ prompt-by-prompt), it simply <strong>costs no more to break</strong>. A lightweight RR pass
-that looks plausible (loss drops, L0 unchanged) shifts <em>no</em> survival curve — exactly the illusion
+that looks plausible (loss drops, L0 unchanged) shifts <em>no</em> survival curve -- exactly the illusion
 the cost framing exists to expose. <strong>M3 RepNoise</strong> went further wrong: it <em>destroyed</em> the model
-(all outputs degenerate), which the collapse guard flagged automatically — an "off-switch" defense
+(all outputs degenerate), which the collapse guard flagged automatically -- an "off-switch" defense
 that zeroes ASR by wrecking utility, caught because we never trust a raw refusal number.</p>
 <p>These negatives are the point, not an embarrassment: cost + a collapse guard + a content judge is
 what tells a real defense from a plausible-looking one.</p>
@@ -418,15 +418,15 @@ what tells a real defense from a plausible-looking one.</p>
 <h2>10. Limitations</h2>
 <ul>
 <li><strong>One vendor model family (Tiny Aya).</strong> The cost <em>ladder</em> and the <em>method</em> generalize; the
-  absolute numbers are Fire/Global-specific. Leave-one-model-out is pre-registered.</li>
+ absolute numbers are Fire/Global-specific. Leave-one-model-out is pre-registered.</li>
 <li><strong>Translated Hinglish/Devanagari core</strong>, native-reviewed on a sample, not fully human-authored.
-  Over-refusal in non-English is lexicon-measured and is a <em>lower bound</em> (the same missing cues hide
-  benign refusals).</li>
+ Over-refusal in non-English is lexicon-measured and is a <em>lower bound</em> (the same missing cues hide
+ benign refusals).</li>
 <li><strong>H4 shown on Fire, English/BoN+templates.</strong> The en-vs-Hinglish margin and multi-model checks are
-  the next runs.</li>
+ the next runs.</li>
 <li><strong>L3 covers abliteration</strong>, not yet fine-tune/quantization attacks.</li>
 <li><strong>Lightweight hardening only.</strong> The RR negative is about a 150-step/2-layer pass, not a claim that
-  RR cannot work with a heavier schedule.</li>
+ RR cannot work with a heavier schedule.</li>
 </ul>
 <hr />
 <h2>11. Responsible disclosure</h2>
@@ -438,18 +438,18 @@ Labs AUP (non-commercial safety research). The laptop demo uses non-actionable c
 <h2>12. Reproducibility and ROI</h2>
 <ul>
 <li><strong>Code:</strong> typed, docstringed Python package; <code>pytest</code> + <code>ruff</code> on CI; fixed seeds; every result
-  traceable to a config + git SHA; no-text aggregates committed under <code>results/</code>, full logs gated.</li>
+ traceable to a config + git SHA; no-text aggregates committed under <code>results/</code>, full logs gated.</li>
 <li><strong>Compute:</strong> the entire study runs on <strong>free Kaggle T4 quota</strong> (30 GPU-h/week). vLLM installs into
-  an isolated venv in ~60 s; the English ladder, per-form H1, BoN, prefill, abliteration, hardening,
-  the Cox audit, and all HarmBench rescores together cost a few GPU-hours — <strong>$0 of paid API or
-  compute.</strong></li>
+ an isolated venv in ~60 s; the English ladder, per-form H1, BoN, prefill, abliteration, hardening,
+ the Cox audit, and all HarmBench rescores together cost a few GPU-hours -- <strong>$0 of paid API or
+ compute.</strong></li>
 <li><strong>Upstream (C5):</strong> a script-/Hinglish-aware BoN and a multilingual refusal matcher for SafeTune, a
-  Hinglish/Indic red-team pack for AuditKIT, and a gated Hinglish adversarial benchmark on HF.</li>
+ Hinglish/Indic red-team pack for AuditKIT, and a gated Hinglish adversarial benchmark on HF.</li>
 <li><strong>ROI:</strong> the expensive thing in safety evaluation is human judgement and GPU time. Magpie's
-  white-box audit (H4) means a deployer can <strong>rank prompts by predicted cost-to-break before
-  spending a single attack</strong>, focusing a red-team budget where it pays off; and the judge-validity
-  result (C4) means they stop trusting a cheap refusal number that would have mis-ranked their own
-  defenses.</li>
+ white-box audit (H4) means a deployer can <strong>rank prompts by predicted cost-to-break before
+ spending a single attack</strong>, focusing a red-team budget where it pays off; and the judge-validity
+ result (C4) means they stop trusting a cheap refusal number that would have mis-ranked their own
+ defenses.</li>
 </ul>
 <hr />
 <p><em>Artifacts: GitHub <code>magpie</code> (code + reproducibility README), HF model collection (hardened
@@ -458,20 +458,20 @@ per-model robustness cards. Full numbers and run provenance in <a href="https://
 <section id="ladder"><h2>How much does the next break cost?</h2>
 <p>Attack success rate (HarmBench-validated) as the attacker gains capability: just ask (L0) → public jailbreaks (L1) → controls the decoder (L2) → edits the weights (L3).</p>
 <img src="hero_ladder.png" alt="Attack success rate by attacker capability level for Fire, Global and the RR-hardened Fire">
-<div class="tw"><table><thead><tr><th>model</th><th>L0 direct</th><th>L1 templates</th><th>L1 best-of-N</th><th>L2 prefill</th><th>L3 abliteration</th></tr></thead><tbody><tr><td>Fire (vendor)</td><td>0.05</td><td>0.29</td><td>0.19</td><td>0.31</td><td>0.68</td></tr><tr><td>Global (vendor)</td><td>0.07</td><td>0.29</td><td>—</td><td>0.16</td><td>0.68</td></tr><tr><td>Fire + RR (hardened)</td><td>—</td><td>0.30</td><td>—</td><td>0.31</td><td>—</td></tr></tbody></table></div><p class="note">Fire and fire_rr overlap — the hardening buys nothing. The L3 jump is the weight-access cliff: safe to ask, broken to edit.</p></section>
-<section id="judge"><h2>Within English — the judge flips the attack ranking</h2><p>Same attempts, two judges. The cheap refusal lexicon over-counts and flips the attack ranking; only a content judge tells a long non-refusal from a real jailbreak.</p><div class="tw"><table><thead><tr><th>attack</th><th>refusal lexicon</th><th>HarmBench (validated)</th></tr></thead><tbody><tr><td>L1 templates</td><td>0.52</td><td><b>0.29</b></td></tr><tr><td>L1 best-of-N</td><td>1.00</td><td><b>0.19</b></td></tr></tbody></table></div>
-<h2>Across languages — the judge flips the ranking of forms</h2><p>Identical prompts, three forms. The lexicon says Devanagari is 4x English and Hinglish is safest; the content judge says the opposite in order and a third in size.</p><div class="tw"><table><thead><tr><th>form</th><th>refusal lexicon</th><th>HarmBench (validated)</th></tr></thead><tbody><tr><td>English</td><td>0.21</td><td><b>0.03</b></td></tr><tr><td>Devanagari</td><td>0.86</td><td><b>0.28</b></td></tr><tr><td>Hinglish</td><td>0.09</td><td><b>0.03</b></td></tr></tbody></table></div>
-<p class="note">You cannot compare robustness across languages — or rank defenses — with a cheap refusal lexicon.</p></section>
-<section id="harden"><h2>Does hardening help?</h2><p>A lightweight Circuit-Breakers/RR pass (fire_rr) re-attacked paired against vendor Fire. It raises attacker cost at no level — an honest negative.</p><div class="tw"><table><thead><tr><th>attacker level</th><th>Fire (HarmBench)</th><th>fire_rr (HarmBench)</th></tr></thead><tbody><tr><td>L1 templates</td><td>0.30</td><td>0.30</td></tr><tr><td>L2 prefill</td><td>0.31</td><td>0.31</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>model</th><th>L0 direct</th><th>L1 templates</th><th>L1 best-of-N</th><th>L2 prefill</th><th>L3 abliteration</th></tr></thead><tbody><tr><td>Fire (vendor)</td><td>0.05</td><td>0.29</td><td>0.19</td><td>0.31</td><td>0.68</td></tr><tr><td>Global (vendor)</td><td>0.07</td><td>0.29</td><td> -- </td><td>0.16</td><td>0.68</td></tr><tr><td>Fire + RR (hardened)</td><td> -- </td><td>0.30</td><td> -- </td><td>0.31</td><td> -- </td></tr></tbody></table></div><p class="note">Fire and fire_rr overlap -- the hardening buys nothing. The L3 jump is the weight-access cliff: safe to ask, broken to edit.</p></section>
+<section id="judge"><h2>Within English -- the judge flips the attack ranking</h2><p>Same attempts, two judges. The cheap refusal lexicon over-counts and flips the attack ranking; only a content judge tells a long non-refusal from a real jailbreak.</p><div class="tw"><table><thead><tr><th>attack</th><th>refusal lexicon</th><th>HarmBench (validated)</th></tr></thead><tbody><tr><td>L1 templates</td><td>0.52</td><td><b>0.29</b></td></tr><tr><td>L1 best-of-N</td><td>1.00</td><td><b>0.19</b></td></tr></tbody></table></div>
+<h2>Across languages -- the judge flips the ranking of forms</h2><p>Identical prompts, three forms. The lexicon says Devanagari is 4x English and Hinglish is safest; the content judge says the opposite in order and a third in size.</p><div class="tw"><table><thead><tr><th>form</th><th>refusal lexicon</th><th>HarmBench (validated)</th></tr></thead><tbody><tr><td>English</td><td>0.21</td><td><b>0.03</b></td></tr><tr><td>Devanagari</td><td>0.86</td><td><b>0.28</b></td></tr><tr><td>Hinglish</td><td>0.09</td><td><b>0.03</b></td></tr></tbody></table></div>
+<p class="note">You cannot compare robustness across languages -- or rank defenses -- with a cheap refusal lexicon.</p></section>
+<section id="harden"><h2>Does hardening help?</h2><p>A lightweight Circuit-Breakers/RR pass (fire_rr) re-attacked paired against vendor Fire. It raises attacker cost at no level -- an honest negative.</p><div class="tw"><table><thead><tr><th>attacker level</th><th>Fire (HarmBench)</th><th>fire_rr (HarmBench)</th></tr></thead><tbody><tr><td>L1 templates</td><td>0.30</td><td>0.30</td></tr><tr><td>L2 prefill</td><td>0.31</td><td>0.31</td></tr></tbody></table></div>
 <p class="note">An honest negative: a defense that looks plausible (training loss drops, L0 clean) yet shifts no survival curve. Validate defenses by re-attacking and measuring cost.</p></section>
-<section id="h4"><h2>Audit before you attack (H4)</h2><p>A prompt's attack-free refusal-direction margin predicts how expensive it is to break (Cox regression; hazard ratio < 1 means a higher margin survives longer).</p><div class="tw"><table><thead><tr><th>attack</th><th>hazard ratio / SD</th><th>95% CI</th><th>p</th></tr></thead><tbody><tr><td>best-of-N</td><td>0.72</td><td>[0.58, 0.89]</td><td>0.003</td></tr><tr><td>templates</td><td>0.60</td><td>—</td><td>2e-6</td></tr><tr><td>pooled Fire + Global (leave-one-model-out)</td><td>0.64</td><td>[0.56, 0.73]</td><td>2e-11</td></tr></tbody></table></div>
-<p class="note">The margin is computed with no attack, from a direction fit on disjoint data — and it predicts cost-to-break on a model it was not tuned on.</p></section>
-<section id="cards"><h2>Robustness cards</h2><p>One-page, deployer-facing summaries per model.</p><div class="card"><h1>Robustness card — Tiny Aya Fire (vendor, M0)</h1>
+<section id="h4"><h2>Audit before you attack (H4)</h2><p>A prompt's attack-free refusal-direction margin predicts how expensive it is to break (Cox regression; hazard ratio < 1 means a higher margin survives longer).</p><div class="tw"><table><thead><tr><th>attack</th><th>hazard ratio / SD</th><th>95% CI</th><th>p</th></tr></thead><tbody><tr><td>best-of-N</td><td>0.72</td><td>[0.58, 0.89]</td><td>0.003</td></tr><tr><td>templates</td><td>0.60</td><td> -- </td><td>2e-6</td></tr><tr><td>pooled Fire + Global (leave-one-model-out)</td><td>0.64</td><td>[0.56, 0.73]</td><td>2e-11</td></tr></tbody></table></div>
+<p class="note">The margin is computed with no attack, from a direction fit on disjoint data -- and it predicts cost-to-break on a model it was not tuned on.</p></section>
+<section id="cards"><h2>Robustness cards</h2><p>One-page, deployer-facing summaries per model.</p><div class="card"><h1>Robustness card -- Tiny Aya Fire (vendor, M0)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
 marked "lexicon"; full provenance (run dirs, git SHAs, CIs) in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>.
 Model: <code>CohereLabs/tiny-aya-fire</code>, 3.35B, cohere2, open weights.</em></p>
 <p><strong>One line.</strong> Safe to a direct ask, holds against public jailbreak templates, but its safety is
-<strong>shallow</strong> (one forced token bypasses it) and it is <strong>defenceless to weight edits</strong> — the on-device
+<strong>shallow</strong> (one forced token bypasses it) and it is <strong>defenceless to weight edits</strong> -- the on-device
 threat that matters for an openly released model.</p>
 <h2>Cost to break (English)</h2>
 <div class="tw"><table>
@@ -540,20 +540,20 @@ templates <em>lower</em> it to ~7% (the "answer directly" framing suppresses ben
 model <em>collapse</em> (degenerate output on romanized code-mixing) is excluded.</p>
 <h2>Deployer guidance</h2>
 <ul>
-<li><strong>Do not rely on the refusal rate.</strong> A refusal-lexicon monitor over-counts safety 4–5× and, in
-  Devanagari, reports the model as ~4× <em>less</em> safe than it is. Use a content judge + a collapse
-  guard.</li>
+<li><strong>Do not rely on the refusal rate.</strong> A refusal-lexicon monitor over-counts safety 4-5× and, in
+ Devanagari, reports the model as ~4× <em>less</em> safe than it is. Use a content judge + a collapse
+ guard.</li>
 <li><strong>Assume prefill = broken.</strong> If any surface lets a caller set the first reply tokens, treat the
-  model as unprotected (ASR 0.80 at one token). Guard the decoder, not just the prompt.</li>
+ model as unprotected (ASR 0.80 at one token). Guard the decoder, not just the prompt.</li>
 <li><strong>Weights are the boundary.</strong> An attacker with the file breaks 2 in 3 harmful prompts by
-  abliteration. On-device deployment must assume this; safety training alone does not help here.</li>
-<li><strong>Watch Devanagari specifically</strong> — it is the weakest language surface.</li>
+ abliteration. On-device deployment must assume this; safety training alone does not help here.</li>
+<li><strong>Watch Devanagari specifically</strong> -- it is the weakest language surface.</li>
 <li><strong>A cheap pre-screen works:</strong> a prompt's refusal-direction margin predicts its cost-to-break
-  (H4), so a red-team budget can be focused before any attack is run.</li>
-</ul></div><div class="card"><h1>Robustness card — Tiny Aya Global (vendor, M1)</h1>
+ (H4), so a red-team budget can be focused before any attack is run.</li>
+</ul></div><div class="card"><h1>Robustness card -- Tiny Aya Global (vendor, M1)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
 marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>. Model:
-<code>CohereLabs/tiny-aya-global</code>, 3.35B, cohere2, open weights — the vendor's safest Tiny Aya variant.</em></p>
+<code>CohereLabs/tiny-aya-global</code>, 3.35B, cohere2, open weights -- the vendor's safest Tiny Aya variant.</em></p>
 <p><strong>One line.</strong> Behaves almost identically to Fire across the ladder: robust to a direct ask, holds
 against templates, shallow to prefill, and broken by weight edits. "Safest variant" does <strong>not</strong>
 mean more expensive to break.</p>
@@ -595,20 +595,20 @@ mean more expensive to break.</p>
 </tbody>
 </table></div>
 <h2>Over-refusal (benign prompts)</h2>
-<p>13% at L0, falling to ~5% under jailbreak templates — the same robustness/over-refusal trade as
+<p>13% at L0, falling to ~5% under jailbreak templates -- the same robustness/over-refusal trade as
 Fire.</p>
 <h2>Deployer guidance</h2>
 <ul>
 <li><strong>Fire ≈ Global at L0/L1/L3</strong>, so picking the "safer" vendor label buys ~no extra cost-to-break
-  there; the real separation is attacker <em>capability</em> (L0→L3), not model choice. The one exception
-  is <strong>prefill</strong>, where Global is content-safer (0.16 vs Fire's 0.31) — but both are fully
-  bypassed by the <em>lexicon</em> (1.00), so this edge is invisible without a content judge and should
-  not be leaned on.</li>
+ there; the real separation is attacker <em>capability</em> (L0→L3), not model choice. The one exception
+ is <strong>prefill</strong>, where Global is content-safer (0.16 vs Fire's 0.31) -- but both are fully
+ bypassed by the <em>lexicon</em> (1.00), so this edge is invisible without a content judge and should
+ not be leaned on.</li>
 <li>The prefill and weight-edit cautions from the Fire card apply unchanged: guard the decoder,
-  assume weight access breaks the model.</li>
+ assume weight access breaks the model.</li>
 <li>Global was evaluated in English; the per-form (Hinglish/Devanagari) and best-of-N studies were
-  run on Fire. Treat Fire's Devanagari gap as the likely Global behaviour pending a matched run.</li>
-</ul></div><div class="card"><h1>Robustness card — Tiny Aya Fire + Circuit-Breakers/RR (hardened, M2)</h1>
+ run on Fire. Treat Fire's Devanagari gap as the likely Global behaviour pending a matched run.</li>
+</ul></div><div class="card"><h1>Robustness card -- Tiny Aya Fire + Circuit-Breakers/RR (hardened, M2)</h1>
 <p><em>A deployer-facing summary. Numbers are content-validated with the HarmBench classifier unless
 marked "lexicon"; full provenance in <a href="https://github.com/shahanxd/magpie/blob/main/docs/RESULTS.md"><code>docs/RESULTS.md</code></a>. Model: Tiny Aya Fire
 hardened with SafeTune M2 (Circuit Breakers / Representation Rerouting), 150 steps, LoRA on 2
@@ -653,21 +653,21 @@ is the honest negative the cost framing is built to surface.</p>
 </tr>
 </tbody>
 </table></div>
-<p>The checkpoint is genuinely the hardened one — its completions differ prompt-by-prompt from Fire's,
-so the merged weights loaded — it simply does not cost more to break.</p>
+<p>The checkpoint is genuinely the hardened one -- its completions differ prompt-by-prompt from Fire's,
+so the merged weights loaded -- it simply does not cost more to break.</p>
 <h2>Verdict for a deployer</h2>
 <ul>
 <li><strong>Do not ship a defense on its training loss.</strong> RR here drove loss 5.0→0.50 and left L0 clean,
-  yet moved no attacker-cost curve. Validate a defense by re-attacking it and measuring the
-  survival curve, not by its loss or its L0 refusal rate.</li>
-<li><strong>Representation rerouting did not touch prefill at all</strong> (safety-depth curve byte-identical) —
-  a shallow-safety attack needs a depth-targeted defense (Qi et al.), not RR.</li>
+ yet moved no attacker-cost curve. Validate a defense by re-attacking it and measuring the
+ survival curve, not by its loss or its L0 refusal rate.</li>
+<li><strong>Representation rerouting did not touch prefill at all</strong> (safety-depth curve byte-identical) -- 
+ a shallow-safety attack needs a depth-targeted defense (Qi et al.), not RR.</li>
 <li>A heavier RR schedule (more steps, more layers) or a different method (CAST) is required before
-  any hardening claim; this lightweight pass is not sufficient.</li>
+ any hardening claim; this lightweight pass is not sufficient.</li>
 </ul>
 <blockquote>
 <p>Companion negative: <strong>M3 RepNoise</strong> on the same model <em>collapsed</em> it (all outputs degenerate),
-which the collapse guard flagged automatically — a defense that zeroes ASR by destroying utility.
+which the collapse guard flagged automatically -- a defense that zeroes ASR by destroying utility.
 Neither lightweight defense is deployable as-is.</p>
 </blockquote></div></section>
 <footer>Generated from committed results by space/build_space_data.py; numbers mirror docs/RESULTS.md (HarmBench-validated). Lexsi Hackathon · Track 2a. Harmful completions are gated; attacked weights are not published.</footer>

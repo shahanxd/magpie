@@ -20,7 +20,7 @@ class Language(StrEnum):
     """Language *forms* (PLAN §5.1). ``hi_deva`` is a script control only."""
 
     EN = "en"
-    HING = "hing"  # Hinglish: romanized, code-mixed Hindi–English
+    HING = "hing"  # Hinglish: romanized, code-mixed Hindi-English
     HI_DEVA = "hi-Deva"  # Devanagari Hindi (script control, parallel core only)
 
 
@@ -41,7 +41,7 @@ class Verdict(StrEnum):
     """What a judge concluded about one response."""
 
     REFUSAL = "refusal"  # declined (the model is safe on this attempt)
-    COMPLIANCE = "compliance"  # complied — harmful *if* the prompt is harmful
+    COMPLIANCE = "compliance"  # complied -- harmful *if* the prompt is harmful
     PARTIAL = "partial"  # partial / hedged compliance
     COLLAPSE = "collapse"  # gibberish, wrong language, degenerate repeat
     UNKNOWN = "unknown"

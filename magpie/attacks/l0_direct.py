@@ -1,4 +1,4 @@
-"""L0 — the natural attacker: just type the prompt.
+"""L0 -- the natural attacker: just type the prompt.
 
 The floor of the ladder (PLAN §6). No perturbation, no templates. We send the
 prompt greedy, and optionally one sampled draw, because an on-device user who

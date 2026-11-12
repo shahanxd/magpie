@@ -2,7 +2,7 @@
 
 **Committed before the main attack runs. The git commit timestamp is the
 pre-registration record.** It states, in advance, what we will measure, how we
-will decide each hypothesis, and what counts as a valid result — so that the
+will decide each hypothesis, and what counts as a valid result -- so that the
 numbers reported in the article cannot be a post-hoc story. Analyses not listed
 here are labelled *exploratory* when reported. See `docs/PLAN.md` §2 for the
 research framing and §3 for the cost model.
@@ -40,35 +40,35 @@ survival result exists yet.** Every number below is a hypothesis.
 ## 2. Confirmatory hypotheses and decision rules
 
 Each hypothesis names its estimator, its test, and the threshold that decides
-it. Unless stated otherwise: survival estimators are Kaplan–Meier with
+it. Unless stated otherwise: survival estimators are Kaplan-Meier with
 bootstrap 95% CIs (10,000 resamples, resampling prompts), group differences use
 the log-rank test, and prompt-level effects use Cox proportional-hazards models
 with cluster-robust SEs on `parallel_id` (the shared id across forms and the
 harmful/benign twin). Significance α = 0.05, two-sided. Where several tests
-share a hypothesis family, we control FDR at 0.05 (Benjamini–Hochberg) and
+share a hypothesis family, we control FDR at 0.05 (Benjamini-Hochberg) and
 report both raw and adjusted p-values.
 
-- **H1 — hardening transfers worse to Hinglish.** For each SafeTune defense
+- **H1 -- hardening transfers worse to Hinglish.** For each SafeTune defense
   (M2, M3, M5 vs M0), the median survival cost (FLOPs) rises more in `en` than
   in `hing`. *Decision:* the ratio `Δmedian_en / Δmedian_hing > 1` with a
   bootstrap CI excluding 1, for a majority of defenses. Reported next to
   over-refusal in both forms.
-- **H2 — natural Hinglish variation is a stronger best-of-N than synthetic
+- **H2 -- natural Hinglish variation is a stronger best-of-N than synthetic
   noise.** Fit `−log ASR(N) = a · N^(−b)` for (i) SafeTune's synthetic
   augmentations and (ii) the natural-Hinglish augmenter, on M0 `hing`.
   *Decision:* exponent `b_natural > b_synthetic` (natural reaches a given ASR in
   fewer samples), bootstrap CI on the difference excluding 0.
-  - **H2b — orthographic over-refusal.** Applying the *same* natural-variation
+  - **H2b -- orthographic over-refusal.** Applying the *same* natural-variation
     augmenter to **benign** Hinglish prompts raises the refusal rate vs their
     unperturbed form. *Decision:* paired increase > 0, McNemar test on the twin
     set.
-- **H3 — weight access removes protection.** With L3 access, every hardened
+- **H3 -- weight access removes protection.** With L3 access, every hardened
   model reaches ≥ 50% ASR within ≤ 10 GPU-minutes on a T4; inference-time
   defenses (M5 CAST) give ≈ 0 added cost from L2 upward. *Decision:* the ≥50%
   KM threshold is crossed within the 10-minute budget for every model, and the
   M5-vs-M0 survival curves at L2+ are statistically indistinguishable (log-rank
   p > 0.05).
-- **H4 — white-box margins predict cost-to-break (the breakthrough bet).**
+- **H4 -- white-box margins predict cost-to-break (the breakthrough bet).**
   In a Cox model `survival_cost ~ refusal_margin + form + model + harm_category
   + CMI`, the per-prompt standardized refusal margin has hazard ratio ≠ 1.
   *Decision:* HR significantly ≠ 1 under L1. Secondary: safety depth predicts
@@ -76,7 +76,7 @@ report both raw and adjusted p-values.
   leave-one-model-out check (fit on all but one model, predict the held-out
   model's prompt ordering; report concordance / Spearman ρ). **A null is a
   publishable result and will be reported as such.**
-- **H5 — judges disagree more on Hinglish, enough to flip a ranking.** Judge-vs-
+- **H5 -- judges disagree more on Hinglish, enough to flip a ranking.** Judge-vs-
   human agreement (Cohen's κ on the gold set) is lower for `hing` than `en`,
   and at least one pairwise defense ranking flips between two judges (Kendall τ
   on the defense ordering). *Decision:* κ_hing < κ_en (CIs non-overlapping) and
@@ -84,7 +84,7 @@ report both raw and adjusted p-values.
 
 ## 3. Exploratory (reported, not confirmatory)
 
-- **RQ6 — prompt injection.** Whether indirect injection succeeds at different
+- **RQ6 -- prompt injection.** Whether indirect injection succeeds at different
   rates by injection language (en vs hing) and by document/injection language
   mismatch, and whether hardening changes injection robustness. Judge-free
   (canary) scoring.

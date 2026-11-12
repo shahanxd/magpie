@@ -1,15 +1,15 @@
-"""L2a — prefilling: force the start of the assistant turn (PLAN §6).
+"""L2a -- prefilling: force the start of the assistant turn (PLAN §6).
 
 A white-box input attacker can put words in the model's mouth by prefilling the
 assistant turn with a short in-language compliance opener ("Sure, here is how
 to ..."). Refusal is shallow (Qi et al. 2025): most of a model's safety lives
-in the first few tokens, so the ASR-vs-depth curve — ASR as a function of the
-number of prefilled compliance tokens k — is the model's *safety depth*.
+in the first few tokens, so the ASR-vs-depth curve -- ASR as a function of the
+number of prefilled compliance tokens k -- is the model's *safety depth*.
 
 Each variant prefills the first ``k`` tokens of the opener via
 ``Request.assistant_prefix`` (already rendered by both backends). Variants are
 yielded cheapest-first (k ascending), so the runner early-stops at the smallest
-k that breaks the prompt — that k is the per-prompt safety depth, analysed with
+k that breaks the prompt -- that k is the per-prompt safety depth, analysed with
 the same ASR(k) curve as best-of-N. The opener itself is benign; it carries no
 harmful content.
 """

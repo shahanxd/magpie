@@ -1,10 +1,10 @@
-"""L3a — abliteration: ablate the refusal direction from the weights (PLAN §6).
+"""L3a -- abliteration: ablate the refusal direction from the weights (PLAN §6).
 
 The canonical weight-space attack (Arditi et al. 2024), via SafeTune's
 ``AbliterationAttack``. It is a one-time edit, not a per-prompt search: the
 attacker fits a refusal direction from a *separate* contrast set once, then the
 model no longer refuses anything. So :meth:`fit` does the work (and carries the
-cost — forward passes over the contrast prompts), and each prompt is then a
+cost -- forward passes over the contrast prompts), and each prompt is then a
 single generation on the ablated model.
 
 Because it installs forward hooks, abliteration needs the HF model (not vLLM):
@@ -47,8 +47,8 @@ class L3Abliteration(Attack):
     def _contrast(self, tokenizer) -> tuple[list[str], list[str]]:
         """Separate harmful/harmless contrast prompts (disjoint from the eval set).
 
-        Uses SafeTune's BeaverTails/Alpaca pairs — the same disjoint set its own
-        refusal-direction code uses — so we never fit the direction on the
+        Uses SafeTune's BeaverTails/Alpaca pairs -- the same disjoint set its own
+        refusal-direction code uses -- so we never fit the direction on the
         prompts we then score.
         """
         from safetune.runner.utils.data_utils import refusal_prompt_pairs_large

@@ -1,4 +1,4 @@
-"""L1d — best-of-N over decoding settings (PLAN §6).
+"""L1d -- best-of-N over decoding settings (PLAN §6).
 
 An on-device user controls temperature and top-p. This attack keeps the prompt
 fixed and draws ``n`` samples at each (temperature, top-p) in the sweep. Every

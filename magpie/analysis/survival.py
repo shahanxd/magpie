@@ -4,7 +4,7 @@ This is the statistical core of C1. A prompt survives until the first valid
 success; unbroken prompts are right-censored at the attacker's budget. From a
 list of :class:`~magpie.types.Outcome` we compute:
 
-* Kaplan–Meier survival S(c) = P(still refused | cost ≤ c), on log10 FLOPs,
+* Kaplan-Meier survival S(c) = P(still refused | cost ≤ c), on log10 FLOPs,
 * median cost-to-break with a bootstrap CI (resampling prompts),
 * the two-sample log-rank test (e.g. en vs Hinglish),
 * attack-success rate (ASR) with a Wilson interval.
@@ -26,7 +26,7 @@ from magpie.types import Outcome
 
 @dataclass
 class KMCurve:
-    """A Kaplan–Meier curve in log10(total FLOPs)."""
+    """A Kaplan-Meier curve in log10(total FLOPs)."""
 
     times: list[float]  # log10 FLOPs at each event
     survival: list[float]  # S(t) after each event

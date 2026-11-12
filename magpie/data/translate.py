@@ -9,7 +9,7 @@ only in the gated dataset, never in the repo.
 Design:
 
 * a :class:`Translator` protocol (``translate(texts, target_form) -> list[str]``),
-* :class:`AyaTranslator` (GPU; vLLM or HF) with per-form instructions —
+* :class:`AyaTranslator` (GPU; vLLM or HF) with per-form instructions -- 
   ``hing`` asks for natural romanized code-mixing (the way people type), and a
   **back-translation agreement gate** (translate back to English and keep only
   pairs whose meaning round-trips) that CuratorKIT records as provenance,

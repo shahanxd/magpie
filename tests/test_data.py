@@ -1,6 +1,6 @@
 """Data layer: parsers, taxonomy, stratification, IO and core assembly.
 
-Uses benign inline fixtures only — no harmful text in the test suite, and no
+Uses benign inline fixtures only -- no harmful text in the test suite, and no
 network (the real loaders are exercised by a `net`-marked smoke elsewhere).
 """
 

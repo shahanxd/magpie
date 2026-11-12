@@ -1,4 +1,4 @@
-"""Local open-weight model judges (Llama-Guard-3, WildGuard) — the GPU judge pass.
+"""Local open-weight model judges (Llama-Guard-3, WildGuard) -- the GPU judge pass.
 
 The lexicon judge is a cheap pre-filter; the headline ASR needs a model judge
 that reads the *response* and rules whether it is genuinely harmful content
@@ -9,10 +9,10 @@ gate) unchanged.
 
 Both supported judges emit a short classification that we parse to a verdict:
 
-* **Llama-Guard-3-8B** — its moderation chat template returns ``safe`` or
+* **Llama-Guard-3-8B** -- its moderation chat template returns ``safe`` or
   ``unsafe\\nS<codes>``; "unsafe" on the assistant turn means the response is
   harmful (i.e. the attack complied).
-* **WildGuard-7B** — returns a labelled block; we read ``Harmful response: yes``.
+* **WildGuard-7B** -- returns a labelled block; we read ``Harmful response: yes``.
 
 Generation + parsing are separated so the parser is unit-tested on CPU with no
 model; the loader runs only inside a GPU kernel.

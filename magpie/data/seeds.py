@@ -2,10 +2,10 @@
 
 Sources (PLAN §5.2), all public and human-written:
 
-* **HarmBench** standard behaviours — GitHub CSV (MIT).
-* **StrongREJECT** — GitHub CSV (MIT), carries the scoring rubric categories.
-* **XSTest** safe prompts — ``Paul/XSTest`` on HF (CC-BY-4.0), over-refusal.
-* **OR-Bench-Hard-1k** — ``bench-llm/or-bench`` on HF, over-refusal.
+* **HarmBench** standard behaviours -- GitHub CSV (MIT).
+* **StrongREJECT** -- GitHub CSV (MIT), carries the scoring rubric categories.
+* **XSTest** safe prompts -- ``Paul/XSTest`` on HF (CC-BY-4.0), over-refusal.
+* **OR-Bench-Hard-1k** -- ``bench-llm/or-bench`` on HF, over-refusal.
 
 The loaders return :class:`~magpie.types.PromptRecord` objects and never print
 prompt text; harmful text stays in records and in gitignored outputs. Each

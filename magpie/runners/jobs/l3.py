@@ -6,7 +6,7 @@ Kaggle's torchao (PEFT/refusal-direction quirk), then runs the eval worker in
 system Python with ``backend=hf`` and ``attack=l3_abliteration``. No vLLM venv.
 
 The worker fits the refusal direction once per model from a disjoint contrast
-set, ablates the weights, and generates one response per harmful prompt — so
+set, ablates the weights, and generates one response per harmful prompt -- so
 the L3a table shows the weight-space attack's effect next to L0/L1.
 """
 

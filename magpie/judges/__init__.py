@@ -1,7 +1,7 @@
 """Judging (PLAN §8): refusal lexicon, collapse guard, local judges, the validity gate.
 
 The multilingual refusal matcher and collapse guard (:mod:`magpie.judges.refusal`)
-fix a verified SafeTune gap — English-only refusal matching that over-counts
+fix a verified SafeTune gap -- English-only refusal matching that over-counts
 non-English attack success. :class:`LexiconJudge` is the CPU pre-filter;
 :class:`CompositeJudge` is the second-judge validity gate.
 """

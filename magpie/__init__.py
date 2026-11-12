@@ -1,4 +1,4 @@
-"""Magpie — pricing robustness as attacker cost.
+"""Magpie -- pricing robustness as attacker cost.
 
 Magpie measures *how much attacker effort* it takes to break a hardened,
 on-device multilingual LLM (Cohere Tiny Aya Fire), in English and in Hinglish,

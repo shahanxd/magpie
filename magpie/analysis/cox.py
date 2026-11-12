@@ -3,7 +3,7 @@
 The pre-registered test (PLAN §9): per-prompt survival-cost regressed on the
 white-box refusal margin. A hazard ratio for the margin significantly below 1
 means a higher margin (further into refusal space) lowers the hazard of being
-broken — i.e. the cheap measurement predicts robustness, the C3 bet. A null is
+broken -- i.e. the cheap measurement predicts robustness, the C3 bet. A null is
 reported as such.
 
 The duration is the attacker effort to break a prompt (best-of-N draws or
@@ -77,7 +77,7 @@ def _cox_lifelines(outcomes, margins_z, extra, n, n_events) -> dict:
 
 
 def _cox_univariate(rows, n, n_events) -> dict:
-    """Breslow-tie Cox partial-likelihood for one covariate, by Newton–Raphson."""
+    """Breslow-tie Cox partial-likelihood for one covariate, by Newton-Raphson."""
     beta = 0.0
     for _ in range(50):
         num_g = num_h = 0.0  # gradient, hessian over event rows
